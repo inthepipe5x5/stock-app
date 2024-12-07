@@ -1,8 +1,8 @@
 "use strict";
 
-const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+import { query as _query } from "../db";
+import { BadRequestError, NotFoundError } from "../expressError";
+import { sqlForPartialUpdate } from "../helpers/sql";
 
 /** Related functions for companies. */
 
@@ -17,7 +17,7 @@ class Company {
    * */
 
   static async create({ handle, name, description, numEmployees, logoUrl }) {
-    const duplicateCheck = await db.query(
+    const duplicateCheck = await _query(
           `SELECT handle
            FROM companies
            WHERE handle = $1`,
@@ -26,7 +26,7 @@ class Company {
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${handle}`);
 
-    const result = await db.query(
+    const result = await _query(
           `INSERT INTO companies
            (handle, name, description, num_employees, logo_url)
            VALUES ($1, $2, $3, $4, $5)
@@ -95,7 +95,7 @@ class Company {
     // Finalize query and return results
 
     query += " ORDER BY name";
-    const companiesRes = await db.query(query, queryValues);
+    const companiesRes = await _query(query, queryValues);
     return companiesRes.rows;
   }
 
@@ -108,7 +108,7 @@ class Company {
    **/
 
   static async get(handle) {
-    const companyRes = await db.query(
+    const companyRes = await _query(
           `SELECT handle,
                   name,
                   description,
@@ -122,7 +122,7 @@ class Company {
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
 
-    const jobsRes = await db.query(
+    const jobsRes = await _query(
           `SELECT id, title, salary, equity
            FROM jobs
            WHERE company_handle = $1
@@ -164,7 +164,7 @@ class Company {
                                 description, 
                                 num_employees AS "numEmployees", 
                                 logo_url AS "logoUrl"`;
-    const result = await db.query(querySql, [...values, handle]);
+    const result = await _query(querySql, [...values, handle]);
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
@@ -178,7 +178,7 @@ class Company {
    **/
 
   static async remove(handle) {
-    const result = await db.query(
+    const result = await _query(
           `DELETE
            FROM companies
            WHERE handle = $1
@@ -191,4 +191,4 @@ class Company {
 }
 
 
-module.exports = Company;
+export default Company;
