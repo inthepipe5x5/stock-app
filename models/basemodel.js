@@ -168,6 +168,25 @@ class BaseModel {
     }
     return mappedRow;
   }
+  /**
+   * Helper to convert camelCase to snake_case in result objects.
+   * NOTE: this is already handled by sqlForPartialUpdate () because ths.columnMappings 
+   * @param {Object} newRow - The object to convert.
+   * @returns {Object} The converted object.
+   */
+  static _mapToSnakeCase(newRow) {
+    if (!newRow) return null;
+
+    const mappedRow = {};
+    for (let [key, value] of Object.entries(newRow)) {
+      const snakeKey = key.replace(
+        /([A-Z])/g,
+        (match, letter) => `_${letter.toLowerCase()}`
+      );
+      mappedRow[snakeKey] = value;
+    }
+    return mappedRow;
+  }
 }
 
 export default BaseModel;
