@@ -15,4 +15,4 @@ DROP DATABASE stockapp_test;
 CREATE DATABASE stockapp_test;
 \connect stockapp_test
 
-\i stockapp-schema.sql
+\i stockapp_schema.sql
