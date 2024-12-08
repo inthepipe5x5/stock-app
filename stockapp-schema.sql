@@ -39,7 +39,7 @@ CREATE TABLE
     UserHouseholds (
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
         household_id INTEGER REFERENCES Households (id) ON DELETE CASCADE,
-        isAdmin BOOLEAN DEFAULT FALSE,
+        is_admin BOOLEAN DEFAULT FALSE,
         PRIMARY KEY (user_id, household_id)
     );
 

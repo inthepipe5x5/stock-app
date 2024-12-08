@@ -52,7 +52,7 @@ async function commonBeforeAll() {
     lastName: "U1L",
     email: "user1@user.com",
     password: "password1",
-    isAdmin: false,
+    is_admin: false,
   });
   await User.register({
     username: "u2",
@@ -60,7 +60,7 @@ async function commonBeforeAll() {
     lastName: "U2L",
     email: "user2@user.com",
     password: "password2",
-    isAdmin: false,
+    is_admin: false,
   });
   await User.register({
     username: "u3",
@@ -68,7 +68,7 @@ async function commonBeforeAll() {
     lastName: "U3L",
     email: "user3@user.com",
     password: "password3",
-    isAdmin: false,
+    is_admin: false,
   });
 
   await User.applyToJob("u1", testJobIds[0]);
@@ -87,9 +87,9 @@ async function commonAfterAll() {
 }
 
 
-const u1Token = createToken({ username: "u1", isAdmin: false });
-const u2Token = createToken({ username: "u2", isAdmin: false });
-const adminToken = createToken({ username: "admin", isAdmin: true });
+const u1Token = createToken({ username: "u1", is_admin: false });
+const u2Token = createToken({ username: "u2", is_admin: false });
+const adminToken = createToken({ username: "admin", is_admin: true });
 
 
 module.exports = {

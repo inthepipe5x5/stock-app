@@ -171,7 +171,7 @@ class User {
   }
 
   /** Add user to a household. */
-  static async joinHousehold(userId, householdId, isAdmin = false) {
+  static async joinHousehold(userId, householdId, is_admin = false) {
     const householdCheck = await db.query(
       `SELECT id
        FROM Households
@@ -182,10 +182,10 @@ class User {
     if (!household) throw new NotFoundError(`No household: ${householdId}`);
 
     await db.query(
-      `INSERT INTO UserHouseholds (user_id, household_id, isAdmin)
+      `INSERT INTO UserHouseholds (user_id, household_id, is_admin)
        VALUES ($1, $2, $3)
        ON CONFLICT DO NOTHING`,
-      [userId, householdId, isAdmin]
+      [userId, householdId, is_admin]
     );
   }
 
