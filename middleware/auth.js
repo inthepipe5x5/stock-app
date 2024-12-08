@@ -3,7 +3,7 @@
 /** Convenience middleware to handle common auth cases in routes. */
 
 const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require("../config");
+const { SECRET_KEY } = require("../config").default;
 const { UnauthorizedError } = require("../expressError");
 
 
@@ -20,7 +20,7 @@ function authenticateJWT(req, res, next) {
     const authHeader = req.headers && req.headers.authorization;
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
-      res.locals.user = jwt.verify(token, SECRET_KEY);
+      res.user = jwt.verify(token, SECRET_KEY);
     }
     return next();
   } catch (err) {
@@ -35,7 +35,7 @@ function authenticateJWT(req, res, next) {
 
 function ensureLoggedIn(req, res, next) {
   try {
-    if (!res.locals.user) throw new UnauthorizedError();
+    if (!res.user) throw new UnauthorizedError();
     return next();
   } catch (err) {
     return next(err);
@@ -50,7 +50,7 @@ function ensureLoggedIn(req, res, next) {
 
 function ensureAdmin(req, res, next) {
   try {
-    if (!res.locals.user || !res.locals.user.isAdmin) {
+    if (!res.user || !res.user.isAdmin) {
       throw new UnauthorizedError();
     }
     return next();
@@ -67,7 +67,7 @@ function ensureAdmin(req, res, next) {
 
 function ensureCorrectUserOrAdmin(req, res, next) {
   try {
-    const user = res.locals.user;
+    const user = res.user;
     if (!(user && (user.isAdmin || user.username === req.params.username))) {
       throw new UnauthorizedError();
     }

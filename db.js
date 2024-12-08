@@ -1,7 +1,7 @@
 "use strict";
 /** Database setup for stockapp. */
-const { Client } = require("pg");
-const { getDatabaseUri } = require("./config");
+import { Client } from "pg";
+import { getDatabaseUri } from "./config";
 
 let db;
 
@@ -20,4 +20,4 @@ if (process.env.NODE_ENV === "production") {
 
 db.connect();
 
-module.exports = db;
+export default db;

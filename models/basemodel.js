@@ -1,8 +1,8 @@
 "use strict";
 
-const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+import { query as _query } from "../db";
+import { BadRequestError, NotFoundError } from "../expressError";
+import { sqlForPartialUpdate } from "../helpers/sql";
 
 class BaseModel {
   /** Define the table name and column mappings in the subclass */
@@ -23,7 +23,7 @@ class BaseModel {
     }
 
     // Check for duplicates
-    const duplicateCheck = await db.query(
+    const duplicateCheck = await _query(
       `SELECT ${primaryKeyColumn}
        FROM ${this.tableName}
        WHERE ${primaryKeyColumn} = $1`,
@@ -44,7 +44,7 @@ class BaseModel {
       VALUES (${keys.map((_, idx) => `$${idx + 1}`).join(", ")})
       RETURNING *`;
 
-    const result = await db.query(query, values);
+    const result = await _query(query, values);
     return this._mapToCamelCase(result.rows[0]);
   }
 
@@ -73,7 +73,7 @@ class BaseModel {
     }
 
     query += " ORDER BY id"; // Customize the sort column if necessary
-    const result = await db.query(query, values);
+    const result = await _query(query, values);
     return result.rows.map(this._mapToCamelCase);
   }
 
@@ -89,7 +89,7 @@ class BaseModel {
       throw new Error("Table name not defined in subclass.");
     }
 
-    const result = await db.query(
+    const result = await _query(
       `SELECT * FROM ${this.tableName} WHERE id = $1`,
       [id]
     );
@@ -124,7 +124,7 @@ class BaseModel {
       WHERE id = ${idVarIdx}
       RETURNING *`;
 
-    const result = await db.query(query, [...values, id]);
+    const result = await _query(query, [...values, id]);
     const record = result.rows[0];
 
     if (!record) {
@@ -145,7 +145,7 @@ class BaseModel {
       throw new Error("Table name not defined in subclass.");
     }
 
-    const result = await db.query(
+    const result = await _query(
       `DELETE FROM ${this.tableName} WHERE id = $1 RETURNING id`,
       [id]
     );
@@ -170,4 +170,4 @@ class BaseModel {
   }
 }
 
-module.exports = BaseModel;
+export default BaseModel;

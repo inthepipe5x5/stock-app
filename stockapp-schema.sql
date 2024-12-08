@@ -1,6 +1,3 @@
---ENUM type for the entry_status column
-CREATE TYPE entry_status AS ENUM('draft', 'confirmed', 'archived', 'deleted');
-
 -- Users table
 -- This table stores app users
 CREATE TABLE
@@ -11,16 +8,30 @@ CREATE TABLE
         -- Oauth details
         oauth_provider VARCHAR(255), -- e.g., 'google', 'github'
         oauth_provider_id VARCHAR(255) UNIQUE, -- e.g., provider-specific user ID
+        -- Refresh token
+        refresh_token TEXT UNIQUE,
+        refresh_token_expires_at TIMESTAMP WITH TIME ZONE
     );
+
+-- Create the ENUM type for task status
+CREATE TYPE completion_status AS ENUM(
+    'done',
+    'assigned',
+    'in progress',
+    'blocked',
+    'archived'
+);
+
+-- Create the ENUM type for draft status
+CREATE TYPE draft_status AS ENUM('draft', 'archived', 'deleted', 'confirmed');
 
 -- Households table
 CREATE TABLE
     Households (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        description TEXT,
+        description TEXT
     );
-
 
 -- UserHouseholds junction table
 -- This table establishes the M:M relationship between Users and Households
@@ -28,7 +39,7 @@ CREATE TABLE
     UserHouseholds (
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
         household_id INTEGER REFERENCES Households (id) ON DELETE CASCADE,
-        isAdmin BOOLEAN ON DELETE CASCADE default False,
+        isAdmin BOOLEAN DEFAULT FALSE,
         PRIMARY KEY (user_id, household_id)
     );
 
@@ -41,7 +52,19 @@ CREATE TABLE
         description TEXT,
         household_id INTEGER REFERENCES Households (id) ON DELETE SET NULL,
         category VARCHAR(255), -- e.g., groceries, toiletries, or custom tag
-        status entry_status default 'confirmed' --store the "draft status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        draft_status draft_status default 'confirmed' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+    );
+
+-- ProductVendors table
+-- This table stores vendors or retailers where the product can be restocked
+CREATE TABLE
+    ProductVendors (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        product_types TEXT[], -- Array of product types
+        vendor_type TEXT[], -- Array of vendor types
+        draft_status draft_status default 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
     );
 
 -- ProductItems table
@@ -67,20 +90,7 @@ CREATE TABLE
         -- Meta data columns (useful for automatic reminders)
         expiration_date DATE,
         updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        status entry_status default 'draft' --store the "draft status" here, eg. archived, deleted, confirmed, etc. don't show to users
-    );
-
--- ProductVendors table
--- This table stores vendors or retailers where the product can be restocked
-CREATE TABLE
-    ProductVendors (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        product_types TEXT[], -- Array of product types
-        vendor_type TEXT[], -- Array of vendor types
-        status entry_status default 'draft' --store the "draft status" here, eg. archived, deleted, confirmed, etc. don't show to users
-
+        draft_status draft_status default 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
     );
 
 -- RelatedVendors table (Many-to-Many relationship)
@@ -102,8 +112,8 @@ CREATE TABLE
         user_id INTEGER REFERENCES Users (id) ON DELETE SET NULL,
         product_id INTEGER REFERENCES ProductItems (id) ON DELETE SET NULL,
         -- Task details
-        due_date DATE,
-        status VARCHAR(50), -- e.g., "done", "assigned", "archived"
+        due_date DATE NOT NULL,
+        completion_status completion_status DEFAULT 'assigned',
         -- Recurrence information
         is_recurring BOOLEAN DEFAULT FALSE,
         recurrence_interval INTERVAL,
@@ -115,7 +125,8 @@ CREATE TABLE
         created_by INTEGER NOT NULL REFERENCES Users (id),
         created_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        last_updated_by INTEGER REFERENCES Users (id)
+        last_updated_by INTEGER REFERENCES Users (id),
+        draft_status draft_status DEFAULT 'draft'
     );
 
 -- TaskAssignments table
