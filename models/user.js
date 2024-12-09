@@ -2,7 +2,7 @@
 
 const db = require("../db.js").default;
 const bcrypt = require("bcrypt");
-const { sqlForPartialUpdate } = require("../helpers/sql.js");
+const { sqlForConditionFilters } = require("../helpers/sql.js").default;
 const {
   NotFoundError,
   BadRequestError,
@@ -16,7 +16,7 @@ const { BCRYPT_WORK_FACTOR } = require("../config.js").default;
 class User {
   /** Authenticate user with email and password.
    *
-   * Returns { id, name, email }
+   * Returns { id, name, email, oauth_provider, oauth_provider_id, refresh_token, refresh_token_expires_at }
    *
    * Throws UnauthorizedError if user not found or wrong password.
    **/
@@ -138,7 +138,7 @@ class User {
       data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
     }
 
-    const { setCols, values } = sqlForPartialUpdate(data, {
+    const { setCols, values } = sqlForConditionFilters(data, {
       name: "name",
       email: "email",
     });

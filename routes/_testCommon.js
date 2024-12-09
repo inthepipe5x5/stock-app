@@ -4,7 +4,7 @@ const db = require("../db.js");
 const User = require("../models/user");
 const Company = require("../models/company");
 const Job = require("../models/job");
-const { createToken } = require("../helpers/tokens");
+const { createAccessToken } = require("../helpers/tokens");
 
 const testJobIds = [];
 
@@ -87,9 +87,9 @@ async function commonAfterAll() {
 }
 
 
-const u1Token = createToken({ username: "u1", is_admin: false });
-const u2Token = createToken({ username: "u2", is_admin: false });
-const adminToken = createToken({ username: "admin", is_admin: true });
+const u1Token = createAccessToken({ username: "u1", is_admin: false });
+const u2Token = createAccessToken({ username: "u2", is_admin: false });
+const adminToken = createAccessToken({ username: "admin", is_admin: true });
 
 
 module.exports = {

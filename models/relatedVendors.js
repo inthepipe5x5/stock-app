@@ -1,10 +1,10 @@
 "use strict";
 
-const BaseModel = require("./BaseModel");
+const BaseModel = require("./basemodel");
 
 class RelatedVendors extends BaseModel {
   static tableName = "RelatedVendors";
-  static columnMappings = {
+  static defaultMapping = {
     vendorId: "vendor_id",
     relatedVendorId: "related_vendor_id",
   };

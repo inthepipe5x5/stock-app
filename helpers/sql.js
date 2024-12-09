@@ -1,4 +1,4 @@
-const { BadRequestError } = require("../expressError");
+import { BadRequestError } from "../expressError";
 
 /**
  * Helper for making selective update queries.
@@ -9,27 +9,28 @@ const { BadRequestError } = require("../expressError");
  * @param dataToUpdate {Object} {field1: newVal, field2: newVal, ...}
  * @param jsToSql {Object} maps js-style data fields to database column names,
  *   like { firstName: "first_name", age: "age" }
+ * @param filterSeparator {string} defaults to " AND " for combining multiple WHERE clauses (ie. for filtering), or use ", " for updating
  *
  * @returns {Object} {sqlSetCols, dataToUpdate}
  *
  * @example {firstName: 'Aliya', age: 32} =>
- *   { setCols: '"first_name"=$1, "age"=$2',
+ *   { whereClause: '"first_name"=$1, "age"=$2',
  *     values: ['Aliya', 32] }
  */
 
-function sqlForPartialUpdate(dataToUpdate, jsToSql) {
-  const keys = Object.keys(dataToUpdate);
-  if (keys.length === 0) throw new BadRequestError("No data");
+const sqlForConditionFilters = (dataToFilter, jsToSql, filterSeparator=" AND ") =>  {
+  const keys = Object.keys(dataToFilter);
+  if (keys.length === 0) throw new BadRequestError("No filters provided");
 
-  // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
-  const cols = keys.map((colName, idx) =>
-      `"${jsToSql[colName] || colName}"=$${idx + 1}`,
+  const filters = keys.map((key, idx) =>
+    `"${jsToSql[key] || key}"=$${idx + 1}`
   );
 
   return {
-    setCols: cols.join(", "),
-    values: Object.values(dataToUpdate),
+    whereClause: filters.join(filterSeparator),
+    values: Object.values(dataToFilter),
   };
 }
 
-module.exports = { sqlForPartialUpdate };
+
+export default { sqlForConditionFilters };

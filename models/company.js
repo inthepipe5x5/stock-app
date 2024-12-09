@@ -2,7 +2,7 @@
 
 import { query as _query } from "../db";
 import { BadRequestError, NotFoundError } from "../expressError";
-import { sqlForPartialUpdate } from "../helpers/sql";
+import { sqlForConditionFilters } from "../helpers/sql";
 
 /** Related functions for companies. */
 
@@ -148,7 +148,7 @@ class Company {
    */
 
   static async update(handle, data) {
-    const { setCols, values } = sqlForPartialUpdate(
+    const { setCols, values } = sqlForConditionFilters(
         data,
         {
           numEmployees: "num_employees",

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Record keeping app with Express.js & React Native/Expo App to manage household product stocks and inventory",
   "main": "server.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -30,7 +30,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "jsonschema": "^1.2.6",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.3.0"
   },

@@ -1,10 +1,10 @@
 "use strict";
 
-const BaseModel = require("./BaseModel");
+const BaseModel = require("./basemodel");
 
 class Tasks extends BaseModel {
   static tableName = "Tasks";
-  static columnMappings = {
+  static defaultMapping = {
     id: "id",
     name: "name",
     description: "description",

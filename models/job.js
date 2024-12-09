@@ -2,7 +2,7 @@
 
 const db = require("../db").default;
 const { NotFoundError} = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForConditionFilters } = require("../helpers/sql");
 
 
 /** Related functions for companies. */
@@ -134,7 +134,7 @@ class Job {
    */
 
   static async update(id, data) {
-    const { setCols, values } = sqlForPartialUpdate(
+    const { setCols, values } = sqlForConditionFilters(
         data,
         {});
     const idVarIdx = "$" + (values.length + 1);

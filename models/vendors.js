@@ -1,6 +1,6 @@
 "use strict";
 
-const BaseModel = require("./BaseModel");
+const BaseModel = require("./basemodel");
 
 class ProductVendors extends BaseModel {
   static tableName = "ProductVendors";

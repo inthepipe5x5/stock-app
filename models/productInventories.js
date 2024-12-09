@@ -1,10 +1,10 @@
 "use strict";
 
-const BaseModel = require("./BaseModel");
+import BaseModel from "./basemodel";
 
 class ProductInventories extends BaseModel {
   static tableName = "ProductInventories";
-  static columnMappings = {
+  static defaultMapping = {
     id: "id",
     name: "name",
     description: "description",
@@ -26,4 +26,4 @@ class ProductInventories extends BaseModel {
   }
 }
 
-module.exports = ProductInventories;
+export default ProductInventories;

@@ -1,19 +1,4 @@
--- Users table
--- This table stores app users
-CREATE TABLE
-    Users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        -- Oauth details
-        oauth_provider VARCHAR(255), -- e.g., 'google', 'github'
-        oauth_provider_id VARCHAR(255) UNIQUE, -- e.g., provider-specific user ID
-        -- Refresh token
-        refresh_token TEXT UNIQUE,
-        refresh_token_expires_at TIMESTAMP WITH TIME ZONE
-    );
-
--- Create the ENUM type for task status
+-- Create the ENUM type for task completion status
 CREATE TYPE completion_status AS ENUM(
     'done',
     'assigned',
@@ -25,11 +10,31 @@ CREATE TYPE completion_status AS ENUM(
 -- Create the ENUM type for draft status
 CREATE TYPE draft_status AS ENUM('draft', 'archived', 'deleted', 'confirmed');
 
+CREATE TYPE role_access AS ENUM(
+    'guest', --view only access 
+    'member', --edit access => can create tasks, complete, edit and assign tasks
+    'admin' --on top of member privileges, can create and manage inventories
+)
+-- Users table
+-- This table stores app users
+CREATE TABLE
+    Users (
+        id SERIAL PRIMARY KEY,
+        NAME VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        -- Oauth details
+        oauth_provider VARCHAR(255), -- e.g., 'google', 'github'
+        oauth_provider_id VARCHAR(255) UNIQUE, -- e.g., provider-specific user ID
+        -- Refresh token
+        refresh_token TEXT UNIQUE,
+        refresh_token_expires_at TIMESTAMP WITH TIME ZONE
+    );
+
 -- Households table
 CREATE TABLE
     Households (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        NAME VARCHAR(255) NOT NULL,
         description TEXT
     );
 
@@ -39,8 +44,8 @@ CREATE TABLE
     UserHouseholds (
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
         household_id INTEGER REFERENCES Households (id) ON DELETE CASCADE,
-        is_admin BOOLEAN DEFAULT FALSE,
-        PRIMARY KEY (user_id, household_id)
+        access_level role_access DEFAULT 'guest',
+        PRIMARY KEY (user_id, household_id),
     );
 
 -- ProductInventories table
@@ -48,11 +53,21 @@ CREATE TABLE
 CREATE TABLE
     ProductInventories (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        NAME VARCHAR(100) NOT NULL,
         description TEXT,
         household_id INTEGER REFERENCES Households (id) ON DELETE SET NULL,
-        category VARCHAR(255), -- e.g., groceries, toiletries, or custom tag
-        draft_status draft_status default 'confirmed' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        category VARCHAR(200), -- e.g., groceries, toiletries, or custom tag
+        draft_status draft_status DEFAULT 'confirmed' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+    );
+
+--UserInventories join table    
+--junction table that enables a Many-to-Many relationship between users and households.
+CREATE TABLE
+    UserInventories (
+        user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
+        inventory_id INTEGER REFERENCES ProductInventories (id) ON DELETE CASCADE,
+        access_level role_access DEFAULT 'guest',
+        PRIMARY KEY (user_id, inventory_id)
     );
 
 -- ProductVendors table
@@ -60,11 +75,13 @@ CREATE TABLE
 CREATE TABLE
     ProductVendors (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        NAME VARCHAR(255) NOT NULL,
         description TEXT,
-        product_types TEXT[], -- Array of product types
-        vendor_type TEXT[], -- Array of vendor types
-        draft_status draft_status default 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        -- Array of product types
+        product_types TEXT[],
+        -- Array of vendor types
+        vendor_type TEXT[],
+        draft_status draft_status DEFAULT 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
     );
 
 -- ProductItems table
@@ -72,25 +89,22 @@ CREATE TABLE
 CREATE TABLE
     ProductItems (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        NAME VARCHAR(255) NOT NULL,
         description TEXT,
         inventory_id INTEGER REFERENCES ProductInventories (id) ON DELETE CASCADE,
         vendor_id INTEGER REFERENCES ProductVendors (id) ON DELETE SET NULL,
-        -- Quantity data columns
         auto_replenish BOOLEAN DEFAULT FALSE,
         min_quantity INTEGER,
         max_quantity INTEGER,
         current_quantity INTEGER NOT NULL,
         unit VARCHAR(50),
-        -- Inventory automation columns
         barcode VARCHAR(255),
         qr_code VARCHAR(255),
         last_scanned TIMESTAMP WITH TIME ZONE,
         scan_history JSONB,
-        -- Meta data columns (useful for automatic reminders)
         expiration_date DATE,
         updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        draft_status draft_status default 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        draft_status draft_status DEFAULT 'draft'
     );
 
 -- RelatedVendors table (Many-to-Many relationship)
@@ -106,22 +120,17 @@ CREATE TABLE
 CREATE TABLE
     Tasks (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        NAME VARCHAR(255) NOT NULL,
         description TEXT,
-        -- Related entities
         user_id INTEGER REFERENCES Users (id) ON DELETE SET NULL,
         product_id INTEGER REFERENCES ProductItems (id) ON DELETE SET NULL,
-        -- Task details
         due_date DATE NOT NULL,
         completion_status completion_status DEFAULT 'assigned',
-        -- Recurrence information
         is_recurring BOOLEAN DEFAULT FALSE,
         recurrence_interval INTERVAL,
         recurrence_end_date DATE,
-        -- Automation columns
         is_automated BOOLEAN DEFAULT FALSE,
         automation_trigger VARCHAR(255),
-        -- Meta columns
         created_by INTEGER NOT NULL REFERENCES Users (id),
         created_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -135,13 +144,24 @@ CREATE TABLE
 CREATE TABLE
     TaskAssignments (
         id SERIAL PRIMARY KEY,
-        -- Related entities
         task_id INTEGER REFERENCES Tasks (id) ON DELETE CASCADE,
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
         product_id INTEGER REFERENCES ProductItems (id) ON DELETE SET NULL,
-        -- Meta columns
         created_by INTEGER NOT NULL REFERENCES Users (id),
         created_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_updated_by INTEGER REFERENCES Users (id)
     );
+
+-- Create indexes for UserHouseholds
+CREATE INDEX idx_userhouseholds_user ON UserHouseholds (user_id);
+
+CREATE INDEX idx_userhouseholds_household ON UserHouseholds (household_id);
+
+-- Create indexes for TaskAssignments
+CREATE INDEX idx_taskassignments_user ON TaskAssignments (user_id);
+
+CREATE INDEX idx_taskassignments_task ON TaskAssignments (task_id);
+
+-- Create indexes for ProductInventories
+CREATE INDEX idx_productinventories_household ON ProductInventories (household_id);

@@ -8,7 +8,7 @@ const express = require("express");
 const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
-const { createToken } = require("../helpers/tokens").default;
+const { createAccessToken } = require("../helpers/tokens").default;
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
 
@@ -36,7 +36,7 @@ router.post("/", ensureAdmin, async function (req, res, next) {
     }
 
     const user = await User.register(req.body);
-    const token = createToken(user);
+    const token = createAccessToken(user);
     return res.status(201).json({ user, token });
   } catch (err) {
     return next(err);

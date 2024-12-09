@@ -7,7 +7,7 @@ import { validate } from "jsonschema";
 import { authenticate, register } from "../models/user";
 import { Router } from "express";
 const router = new Router();
-import { createToken } from "../helpers/tokens";
+import { createAccessToken } from "../helpers/tokens";
 import userAuthSchema from "../schemas/userAuth.json";
 import userRegisterSchema from "../schemas/userRegister.json";
 import { BadRequestError } from "../expressError";
@@ -29,7 +29,7 @@ router.post("/token", async function (req, res, next) {
 
     const { username, password } = req.body;
     const user = await authenticate(username, password);
-    const token = createToken(user);
+    const token = createAccessToken(user);
     return res.json({ token });
   } catch (err) {
     return next(err);
@@ -55,7 +55,7 @@ router.post("/register", async function (req, res, next) {
     }
 
     const newUser = await register({ ...req.body, is_admin: false });
-    const token = createToken(newUser);
+    const token = createAccessToken(newUser);
     return res.status(201).json({ token });
   } catch (err) {
     return next(err);
