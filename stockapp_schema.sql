@@ -10,11 +10,13 @@ CREATE TYPE completion_status AS ENUM(
 -- Create the ENUM type for draft status
 CREATE TYPE draft_status AS ENUM('draft', 'archived', 'deleted', 'confirmed');
 
+-- Create the ENUM type for role access
 CREATE TYPE role_access AS ENUM(
-    'guest', --view only access 
-    'member', --edit access => can create tasks, complete, edit and assign tasks
-    'admin' --on top of member privileges, can create and manage inventories
-)
+    'guest', -- view-only access
+    'member', -- edit access: can create tasks, complete, edit, and assign tasks
+    'admin' -- on top of member privileges, can create and manage inventories
+);
+
 -- Users table
 -- This table stores app users
 CREATE TABLE
@@ -22,7 +24,7 @@ CREATE TABLE
         id SERIAL PRIMARY KEY,
         NAME VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        -- Oauth details
+        -- OAuth details
         oauth_provider VARCHAR(255), -- e.g., 'google', 'github'
         oauth_provider_id VARCHAR(255) UNIQUE, -- e.g., provider-specific user ID
         -- Refresh token
@@ -45,11 +47,10 @@ CREATE TABLE
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
         household_id INTEGER REFERENCES Households (id) ON DELETE CASCADE,
         access_level role_access DEFAULT 'guest',
-        PRIMARY KEY (user_id, household_id),
+        PRIMARY KEY (user_id, household_id)
     );
 
 -- ProductInventories table
--- This table stores collections of products grouped by intended use location, item type, or custom user sorting
 CREATE TABLE
     ProductInventories (
         id SERIAL PRIMARY KEY,
@@ -57,11 +58,10 @@ CREATE TABLE
         description TEXT,
         household_id INTEGER REFERENCES Households (id) ON DELETE SET NULL,
         category VARCHAR(200), -- e.g., groceries, toiletries, or custom tag
-        draft_status draft_status DEFAULT 'confirmed' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        draft_status draft_status DEFAULT 'confirmed' -- store the "draft_status" here, e.g., archived, deleted, confirmed, etc. Don't show to users
     );
 
---UserInventories join table    
---junction table that enables a Many-to-Many relationship between users and households.
+-- UserInventories join table
 CREATE TABLE
     UserInventories (
         user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
@@ -71,7 +71,6 @@ CREATE TABLE
     );
 
 -- ProductVendors table
--- This table stores vendors or retailers where the product can be restocked
 CREATE TABLE
     ProductVendors (
         id SERIAL PRIMARY KEY,
@@ -81,11 +80,10 @@ CREATE TABLE
         product_types TEXT[],
         -- Array of vendor types
         vendor_type TEXT[],
-        draft_status draft_status DEFAULT 'draft' --store the "draft_status" here, eg. archived, deleted, confirmed, etc. don't show to users
+        draft_status draft_status DEFAULT 'draft'
     );
 
 -- ProductItems table
--- This table stores individual product entries input by a user
 CREATE TABLE
     ProductItems (
         id SERIAL PRIMARY KEY,
@@ -107,7 +105,7 @@ CREATE TABLE
         draft_status draft_status DEFAULT 'draft'
     );
 
--- RelatedVendors table (Many-to-Many relationship)
+-- RelatedVendors table
 CREATE TABLE
     RelatedVendors (
         vendor_id INTEGER REFERENCES ProductVendors (id) ON DELETE CASCADE,
@@ -116,7 +114,6 @@ CREATE TABLE
     );
 
 -- Tasks table
--- This table stores tasks associated with a household, inventory, or product
 CREATE TABLE
     Tasks (
         id SERIAL PRIMARY KEY,
@@ -139,8 +136,6 @@ CREATE TABLE
     );
 
 -- TaskAssignments table
--- This table tracks the assignment of tasks to users and/or products
--- This is a M:M relational table to enable multiple users to be assigned multiple tasks
 CREATE TABLE
     TaskAssignments (
         id SERIAL PRIMARY KEY,
@@ -153,15 +148,15 @@ CREATE TABLE
         last_updated_by INTEGER REFERENCES Users (id)
     );
 
--- Create indexes for UserHouseholds
+-- Indexes for UserHouseholds
 CREATE INDEX idx_userhouseholds_user ON UserHouseholds (user_id);
 
 CREATE INDEX idx_userhouseholds_household ON UserHouseholds (household_id);
 
--- Create indexes for TaskAssignments
+-- Indexes for TaskAssignments
 CREATE INDEX idx_taskassignments_user ON TaskAssignments (user_id);
 
 CREATE INDEX idx_taskassignments_task ON TaskAssignments (task_id);
 
--- Create indexes for ProductInventories
+-- Indexes for ProductInventories
 CREATE INDEX idx_productinventories_household ON ProductInventories (household_id);
