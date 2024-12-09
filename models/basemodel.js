@@ -14,7 +14,7 @@ class BaseModel {
   static defaultMapping = {};
   static columnMappings = this.createColumnMapping();
   static dbSchema = "public"; //default schema that tables will be stored under
-
+  static primaryKeyColumn = this.getPrimaryKeyColumns();
   /** Create a new record.
    *
    * @param {Object} data - Object containing the record details.
@@ -121,7 +121,10 @@ class BaseModel {
       throw new Error("Table name not defined in subclass.");
     }
 
-    const { setCols, values } = sqlForConditionFilters(data, this.columnMappings);
+    const { setCols, values } = sqlForConditionFilters(
+      data,
+      this.columnMappings
+    );
     const idVarIdx = `$${values.length + 1}`;
 
     const query = `
@@ -161,17 +164,17 @@ class BaseModel {
     }
   }
 
-/**
- * The function `complexDelete` performs a complex delete operation based on the input parameters
- * provided.
- * @param deleteParamObj - The `deleteParamObj` parameter in the `complexDelete` method is an object
- * that contains the criteria for deleting records from a database table. It is used to generate the
- * WHERE clause for the DELETE statement. The keys of this object should correspond to columns in the
- * database table, and the values are the search values to filter by
- * @returns The `complexDelete` method returns the first row of the result set after executing the
- * DELETE query. If no rows are deleted, it throws a `NotFoundError` with the message "No matching
- * record found to delete."
- */
+  /**
+   * The function `complexDelete` performs a complex delete operation based on the input parameters
+   * provided.
+   * @param deleteParamObj - The `deleteParamObj` parameter in the `complexDelete` method is an object
+   * that contains the criteria for deleting records from a database table. It is used to generate the
+   * WHERE clause for the DELETE statement. The keys of this object should correspond to columns in the
+   * database table, and the values are the search values to filter by
+   * @returns The `complexDelete` method returns the first row of the result set after executing the
+   * DELETE query. If no rows are deleted, it throws a `NotFoundError` with the message "No matching
+   * record found to delete."
+   */
   static async complexDelete(deleteParamObj) {
     // Validate input and ensure tableName is defined
     if (
@@ -183,10 +186,8 @@ class BaseModel {
     }
 
     // Generate WHERE clause and values
-    const { setCols: whereClause, values: searchValues } = sqlForConditionFilters(
-      deleteParamObj,
-      this.columnMappings
-    );
+    const { setCols: whereClause, values: searchValues } =
+      sqlForConditionFilters(deleteParamObj, this.columnMappings);
 
     // Construct the DELETE statement
     const queryStatement = `
@@ -203,6 +204,32 @@ class BaseModel {
     }
 
     return result.rows[0];
+  }
+  static async complexFind(searchParams) {
+    // Validate input and ensure tableName is defined
+    if (
+      !this.tableName ||
+      !searchParams ||
+      !Object.keys(searchParams).every((key) => key in this.columnMappings)
+    ) {
+      return [];
+    }
+
+    // Generate WHERE clause and values
+    const { setCols: whereClause, values: searchValues } = sqlForPartialUpdate(
+      searchParams,
+      this.columnMappings
+    );
+
+    // Construct the SELECT statement
+    const queryStatement = `
+      SELECT * FROM ${this.tableName}
+      WHERE ${whereClause}`;
+
+    // Execute the query
+    const result = await _query(queryStatement, searchValues);
+
+    return result.rows;
   }
 
   /** Helper to convert snake_case to camelCase in result objects. */
@@ -302,6 +329,35 @@ class BaseModel {
       } catch (err) {
         console.error(err);
       }
+    }
+  }
+
+  // Function to get primary key columns for a table
+  static async getPrimaryKeyColumns(tableName = this.tableName) {
+    if (!tableName || tableName === null)
+      return; //do nothing if falsy/null tableName
+    else {
+      const result = await _query(
+        `SELECT a.attname
+                                      FROM pg_index i
+                                      JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                                      WHERE i.indrelid = '$1'::regclass AND i.indisprimary`,
+        [tableName]
+      );
+
+      return result.rows.map((row) => row.attname);
+    }
+  }
+  static async duplicateCheck(primaryKeysObj, tableName = this.tableName, throwErrorIfDuplicate=True) {
+    if (!tableName || tableName === null) return; //do nothing if falsy/null tableName
+
+    const duplicateQuery = await BaseModel.complexFind(primaryKeysObj)
+
+    if (duplicateQuery.rows[0] && throwErrorIfDuplicate) {
+      throw new BadRequestError(`Duplicate found: ${duplicateQuery.rows[0]}`);
+    }
+    else {
+      return duplicateQuery.rows[0]
     }
   }
 }

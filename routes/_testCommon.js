@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db.js");
-const User = require("../models/user");
+const User = require("../models/user").default;
 const Company = require("../models/company");
 const Job = require("../models/job");
 const { createAccessToken } = require("../helpers/tokens");

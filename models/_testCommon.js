@@ -54,7 +54,7 @@ async function commonBeforeAll() {
   // Insert UserHouseholds
   await query(
     `
-    INSERT INTO UserHouseholds (user_id, household_id, is_admin)
+    INSERT INTO UserHouseholds (user_id, household_id, roleAccess)
     VALUES 
       ($1, $2, true),
       ($3, $4, false)`,

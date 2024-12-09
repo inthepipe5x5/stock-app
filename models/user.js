@@ -1,19 +1,32 @@
 "use strict";
 
-const db = require("../db.js").default;
-const bcrypt = require("bcrypt");
-const { sqlForConditionFilters } = require("../helpers/sql.js").default;
-const {
+import db from "../db.js";
+import { compare, hash } from "bcrypt";
+import BaseModel from "./basemodel.js";
+import sqlForConditionFilters from "../helpers/sql.js";
+import { convertSnakeToCamel } from "../helpers/caseConverter.js";
+import {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
-} = require("../expressError.js");
-
-const { BCRYPT_WORK_FACTOR } = require("../config.js").default;
+} from "../expressError.js";
+import { BCRYPT_WORK_FACTOR } from "../config.js";
 
 /** Related functions for users. */
+class User extends BaseModel {
+  static tableName = "Users";
+  static defaultMapping = [
+    "name",
+    "email",
+    "password",
+    "oauth_provider",
+    "oauth_provider_id",
+    "refresh_token",
+    "refresh_token_expires_at",
+  ].reduce((accum, current) => {
+    accum[convertSnakeToCamel(current)] = current;
+  }, {});
 
-class User {
   /** Authenticate user with email and password.
    *
    * Returns { id, name, email, oauth_provider, oauth_provider_id, refresh_token, refresh_token_expires_at }
@@ -25,7 +38,11 @@ class User {
       `SELECT id,
               name,
               email,
-              password
+              password,
+              oauth_provider,
+              oauth_provider_id,
+              refresh_token,
+              refresh_token_expires_at
        FROM Users
        WHERE email = $1`,
       [email]
@@ -34,7 +51,7 @@ class User {
     const user = result.rows[0];
 
     if (user) {
-      const isValid = await bcrypt.compare(password, user.password);
+      const isValid = await compare(password, user.password);
       if (isValid) {
         delete user.password;
         return user;
@@ -46,41 +63,47 @@ class User {
 
   /** Register user with data.
    *
-   * Returns { id, name, email }
+   * Returns { id, name, email, oauth_provider, oauth_provider_id }
    *
    * Throws BadRequestError on duplicates.
    **/
-  static async register({
-    name,
-    email,
-    password,
-    oauthProvider,
-    oauthProviderId,
-  }) {
-    const duplicateCheck = await db.query(
-      `SELECT email
-       FROM Users
-       WHERE email = $1`,
-      [email]
-    );
 
-    if (duplicateCheck.rows[0]) {
-      throw new BadRequestError(`Duplicate email: ${email}`);
+  static async register(newUserData) {
+    if (!newUserData || newUserData === null)
+      return; //do nothing if falsy data;
+    else {
+      try {
+        //grab the pk values from the newUserData to be
+        const primaryKeyMapping = Object.fromEntries(
+          this.primaryKeyColumn.map((key, idx) => [
+            key,
+            Object.keys(newUserData).filter((key) =>
+              this.primaryKeyColumn.includes(key)
+            )[idx],
+          ])
+        );
+
+        //check for duplicates => throws error if duplicate found
+        this.duplicateCheck(this.tableName, primaryKeyMapping, true);
+
+        const { whereClause, values } = sqlForConditionFilters(
+          newUserData,
+          this.defaultMapping,
+          ", "
+        );
+
+        const result = await db.query(
+          `INSERT INTO Users (${whereClause}) VALUES (${values.map(
+            (_, i) => `$${i + 1}`
+          )}) RETURNING ${whereClause}`,
+          values
+        );
+
+        return result.rows[0];
+      } catch (error) {
+        console.error(`Error registering new user ${primaryKeyMapping}: ${e}`);
+      }
     }
-
-    const hashedPassword = password
-      ? await bcrypt.hash(password, BCRYPT_WORK_FACTOR)
-      : null;
-
-    const result = await db.query(
-      `INSERT INTO Users
-       (name, email, password, oauth_provider, oauth_provider_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, email`,
-      [name, email, hashedPassword, oauthProvider, oauthProviderId]
-    );
-
-    return result.rows[0];
   }
 
   /** Find all users.
@@ -98,14 +121,14 @@ class User {
 
   /** Given a user ID, return data about user.
    *
-   * Returns { id, name, email, households }
-   *   where households is [{ id, name }, ...]
+   * Returns { id, name, email, oauth_provider, oauth_provider_id, households }
+   *   where households is [{ id, name, access_level }, ...]
    *
    * Throws NotFoundError if user not found.
    **/
   static async get(id) {
     const userRes = await db.query(
-      `SELECT id, name, email
+      `SELECT ${Object.values(this.columnMappings)}
        FROM Users
        WHERE id = $1`,
       [id]
@@ -115,7 +138,7 @@ class User {
     if (!user) throw new NotFoundError(`No user: ${id}`);
 
     const userHouseholdsRes = await db.query(
-      `SELECT h.id, h.name
+      `SELECT h.id, h.name, uh.access_level
        FROM UserHouseholds uh
        JOIN Households h ON uh.household_id = h.id
        WHERE uh.user_id = $1`,
@@ -129,25 +152,27 @@ class User {
   /** Update user data with `data`.
    *
    * Data can include:
-   *   { name, email, password }
+   *   { name, email, password, refresh_token, refresh_token_expires_at }
    *
-   * Returns { id, name, email }
+   * Returns { id, name, email, oauth_provider, oauth_provider_id }
    **/
   static async update(id, data) {
     if (data.password) {
-      data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
+      data.password = await hash(data.password, BCRYPT_WORK_FACTOR);
     }
 
     const { setCols, values } = sqlForConditionFilters(data, {
       name: "name",
       email: "email",
+      refreshToken: "refresh_token",
+      refreshTokenExpiresAt: "refresh_token_expires_at",
     });
     const idVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE Users 
                       SET ${setCols} 
                       WHERE id = ${idVarIdx} 
-                      RETURNING id, name, email`;
+                      RETURNING id, name, email, oauth_provider, oauth_provider_id`;
     const result = await db.query(querySql, [...values, id]);
     const user = result.rows[0];
 
@@ -171,7 +196,7 @@ class User {
   }
 
   /** Add user to a household. */
-  static async joinHousehold(userId, householdId, is_admin = false) {
+  static async joinHousehold(userId, householdId, accessLevel = "guest") {
     const householdCheck = await db.query(
       `SELECT id
        FROM Households
@@ -182,10 +207,10 @@ class User {
     if (!household) throw new NotFoundError(`No household: ${householdId}`);
 
     await db.query(
-      `INSERT INTO UserHouseholds (user_id, household_id, is_admin)
+      `INSERT INTO UserHouseholds (user_id, household_id, access_level)
        VALUES ($1, $2, $3)
        ON CONFLICT DO NOTHING`,
-      [userId, householdId, is_admin]
+      [userId, householdId, accessLevel]
     );
   }
 
@@ -207,4 +232,4 @@ class User {
   }
 }
 
-module.exports = User;
+export default User;

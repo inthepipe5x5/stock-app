@@ -7,7 +7,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
-const User = require("../models/user");
+const User = require("../models/user").default;
 const { createAccessToken } = require("../helpers/tokens").default;
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
@@ -22,7 +22,7 @@ const router = express.Router();
  * admin.
  *
  * This returns the newly created user and an authentication token for them:
- *  {user: { username, firstName, lastName, email, is_admin }, token }
+ *  {user: { username, firstName, lastName, email, roleAccess }, token }
  *
  * Authorization required: admin
  **/
@@ -63,7 +63,7 @@ router.get("/", ensureAdmin, async function (req, res, next) {
 
 /** GET /[username] => { user }
  *
- * Returns { username, firstName, lastName, is_admin, jobs }
+ * Returns { username, firstName, lastName, roleAccess, jobs }
  *   where jobs is { id, title, companyHandle, companyName, state }
  *
  * Authorization required: admin or same user-as-:username
@@ -84,7 +84,7 @@ router.get("/:username", ensureCorrectUserOrAdmin, async function (req, res, nex
  * Data can include:
  *   { firstName, lastName, password, email }
  *
- * Returns { username, firstName, lastName, email, is_admin }
+ * Returns { username, firstName, lastName, email, roleAccess }
  *
  * Authorization required: admin or same-user-as-:username
  **/

@@ -71,7 +71,7 @@ getTableNames()
   })
   .catch((e) => console.error(`Error getting table names: ${e}`));
 
-export default {
+export {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,

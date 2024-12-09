@@ -6,10 +6,8 @@ const { SECRET_KEY } = require("../config");
 function createAccessToken(user) {
   const payload = {
     user: user.id,
-    role: user.role,
-    email: user.email,
+    roleAccess: user.roleAccess,
     households: user.households,
-    inventory: user.inventory,
     tasks: user.tasks,
   };
   const options = {
@@ -30,7 +28,7 @@ async function refreshToken(req, res, next) {
     const { refreshToken } = req.body;
 
     // Find user with matching refresh token
-    const user = await User.findByRefreshToken(refreshToken);
+    const user = await User.complexFind(refreshToken);
     if (!user) throw new UnauthorizedError("Invalid refresh token");
 
     // Check expiration

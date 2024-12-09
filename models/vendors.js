@@ -4,7 +4,7 @@ const BaseModel = require("./basemodel");
 
 class ProductVendors extends BaseModel {
   static tableName = "ProductVendors";
-  static columnMappings = {
+  static defaultMapping = {
     id: "id",
     name: "name",
     description: "description",
