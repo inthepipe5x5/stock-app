@@ -33,4 +33,4 @@ const sqlForConditionFilters = (dataToFilter, jsToSql, filterSeparator=" AND ") 
 }
 
 
-export default { sqlForConditionFilters };
+export default sqlForConditionFilters ;

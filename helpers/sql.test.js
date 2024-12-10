@@ -1,4 +1,7 @@
-import { sqlForConditionFilters } from "./sql";
+"use strict";
+
+import sqlForConditionFilters from "./sql.js"
+console.log(sqlForConditionFilters); // Should log a function
 
 describe("sqlForConditionFilters", function () {
   test("works: 1 item with default separator (AND)", function () {
@@ -7,7 +10,7 @@ describe("sqlForConditionFilters", function () {
       { f1: "f1", fF2: "f2" }
     );
     expect(result).toEqual({
-      whereClause: "\"f1\"=$1",
+      whereClause: '"f1"=$1',
       values: ["v1"],
     });
   });
@@ -18,7 +21,7 @@ describe("sqlForConditionFilters", function () {
       { jsF2: "f2" }
     );
     expect(result).toEqual({
-      whereClause: "\"f1\"=$1 AND \"f2\"=$2",
+      whereClause: '"f1"=$1 AND "f2"=$2',
       values: ["v1", "v2"],
     });
   });
@@ -30,7 +33,7 @@ describe("sqlForConditionFilters", function () {
       ", "
     );
     expect(result).toEqual({
-      whereClause: "\"f1\"=$1, \"f2\"=$2",
+      whereClause: '"f1"=$1, "f2"=$2',
       values: ["v1", "v2"],
     });
   });
@@ -42,12 +45,9 @@ describe("sqlForConditionFilters", function () {
   });
 
   test("works: unknown field (uses key as is)", function () {
-    const result = sqlForConditionFilters(
-      { unknown: "v1" },
-      { f1: "f1" }
-    );
+    const result = sqlForConditionFilters({ unknown: "v1" }, { f1: "f1" });
     expect(result).toEqual({
-      whereClause: "\"unknown\"=$1",
+      whereClause: '"unknown"=$1',
       values: ["v1"],
     });
   });
