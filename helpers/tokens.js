@@ -1,55 +1,72 @@
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const { SECRET_KEY } = require("../config");
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
-/** Generate short-lived access token for short term auth */
-function createAccessToken(user) {
-  const payload = {
-    user: user.id,
-    roleAccess: user.roleAccess,
-    households: user.households,
-    tasks: user.tasks,
-  };
+import { UnauthorizedError } from "../expressError";
+import User from "../models/user";
+import parseTimeString from "./parseTimeString";
+import { SECRET_KEY } from "../config";
+
+const createToken = ({
+  oauthProviderId,
+  roleAccess,
+  households,
+  inventories,
+  tokenType = "access",
+}) => {
+  if (
+    !tokenType ||
+    typeof tokenType !== "string" ||
+    !["access", "refresh"].includes(tokenType.toLowerCase())
+  )
+    throw new TypeError("Invalid params for token creation received");
+
+  const isAccessToken = tokenType.toLowerCase() === "access";
+
+  // Construct payload based on token type
+  const payload = isAccessToken
+    ? { oauthProviderId, roleAccess, households, inventories }
+    : { oauthProviderId }; // Minimal payload for refresh token
+
+  // Set token options
   const options = {
-    expiresIn: "1h", // Short-lived
+    expiresIn: isAccessToken
+      ? parseTimeString(process.env.ACCESS_TOKEN_DURATION) // e.g., "15m" => 15 min in seconds
+      : parseTimeString(process.env.REFRESH_TOKEN_DURATION), // e.g., "14d" => 14 days in seconds
     jwtid: crypto.randomUUID(), // Unique ID for token
   };
+
+  // Sign and return the token
   return jwt.sign(payload, SECRET_KEY, options);
-}
+};
 
-/** Generate refresh token */
-function createRefreshToken() {
-  return crypto.randomBytes(64).toString("hex"); // Secure random string
-}
-
-
-async function refreshToken(req, res, next) {
+const updateAccessToken = async (decodedRefreshToken) => {
   try {
-    const { refreshToken } = req.body;
+    // const decoded = jwt.verify(refreshToken, SECRET_KEY); //this will be done in the /auth.js middleware
 
-    // Find user with matching refresh token
-    const user = await User.complexFind(refreshToken);
-    if (!user) throw new UnauthorizedError("Invalid refresh token");
+    // Fetch additional user data from the database
+    const userData = await User.complexFind({
+      oauthProviderId: decodedRefreshToken.oauthProviderId,
+    });
 
-    // Check expiration
-    if (new Date() > user.refresh_token_expires_at) {
-      throw new UnauthorizedError("Refresh token expired");
+    if (userData) {
+      const newAccessToken = createToken({
+        oauthProviderId: decodedRefreshToken.oauthProviderId,
+        roleAccess: userData.roleAccess,
+        households: userData.households,
+        inventories: userData.inventories,
+        tokenType: "access",
+      });
+
+      return newAccessToken;
+    } else {
+      throw new UnauthorizedError(
+        `No user found with this oauthProviderId: ${decodedRefreshToken.oauthProviderId}`
+      );
     }
-
-    // Rotate the refresh token
-    const newRefreshToken = generateRefreshToken();
-    const newRefreshTokenExpiresAt = new Date();
-    newRefreshTokenExpiresAt.setDate(newRefreshTokenExpiresAt.getDate() + 30);
-
-    await User.updateRefreshToken(user.id, newRefreshToken, newRefreshTokenExpiresAt);
-
-    // Issue a new access token
-    const accessToken = createAccessToken(user);
-
-    res.json({ accessToken, refreshToken: newRefreshToken });
-  } catch (err) {
-    return next(err);
+  } catch (error) {
+    console.error("Error updating access token:", error);
+    throw new Error("Unable to update access token");
   }
-}
+};
 
-export { createAccessToken, createRefreshToken };
+export { createToken, updateAccessToken };

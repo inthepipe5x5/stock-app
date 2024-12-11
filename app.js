@@ -2,24 +2,23 @@
 
 /** Express app for stockapp. */
 
-const express = require("express");
-const cors = require("cors");
+import express, { json } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { NotFoundError } from "./expressError";
 
-const { NotFoundError } = require("./expressError");
+import { authenticateJWT } from "./middleware/auth";
+import authRoutes from "./routes/auth";
+import usersRoutes from "./routes/users";
 
-const { authenticateJWT } = require("./middleware/auth");
-const authRoutes = require("./routes/auth").default;
-const companiesRoutes = require("./routes/companies");
-const usersRoutes = require("./routes/users");
-const jobsRoutes = require("./routes/jobs");
-
-const morgan = require("morgan");
+import morgan from "morgan";
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 app.use(morgan("tiny"));
+app.use(cookieParser()) //use cookie parser to handle http only cookies
 app.use(authenticateJWT);
 
 app.use("/auth", authRoutes);
@@ -44,4 +43,4 @@ app.use(function (err, req, res, next) {
   });
 });
 
-module.exports = app;
+export default app;

@@ -2,9 +2,10 @@
 
 /** Convenience middleware to handle common auth cases in routes. */
 
-const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require("../config").default;
-const { UnauthorizedError } = require("../expressError");
+import { verify } from "jsonwebtoken";
+import { SECRET_KEY } from "../config";
+import { UnauthorizedError } from "../expressError";
+import { updateAccessToken } from "../helpers/tokens";
 
 
 /** Middleware: Authenticate user.
@@ -19,8 +20,9 @@ function authenticateJWT(req, res, next) {
   try {
     const authHeader = req.headers && req.headers.authorization;
     if (authHeader) {
-      const token = authHeader.replace(/^[Bb]earer /, "").trim();
-      res.user = jwt.verify(token, SECRET_KEY);
+      const refreshToken = authHeader.replace(/^[Bb]earer /, "").trim();
+      const oauthID = verify(refreshToken, SECRET_KEY);
+      req.body = updateAccessToken(oauthID)
     }
     return next();
   } catch (err) {
@@ -78,7 +80,7 @@ function ensureCorrectUserOrAdmin(req, res, next) {
 }
 
 
-module.exports = {
+export default {
   authenticateJWT,
   ensureLoggedIn,
   ensureAdmin,
