@@ -1,6 +1,6 @@
 "use strict";
 
-const BaseModel = require("./basemodel");
+import BaseModel from "./basemodel";
 
 class Tasks extends BaseModel {
   static tableName = "Tasks";
@@ -26,7 +26,7 @@ class Tasks extends BaseModel {
   /** Find all tasks for a specific user. */
   static async findTasksByUser(userId) {
     const result = await db.query(
-      `SELECT * FROM ${this.tableName}
+      `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName}
        WHERE user_id = $1 OR created_by = $1`,
       [userId]
     );
@@ -34,4 +34,4 @@ class Tasks extends BaseModel {
   }
 }
 
-module.exports = Tasks;
+export default Tasks;

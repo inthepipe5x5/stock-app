@@ -6,15 +6,21 @@ import {
   convertCamelToSnake,
   convertSnakeToCamel,
 } from "../helpers/caseConverter";
-import { sqlForConditionFilters } from "../helpers/sql";
+import sqlForConditionFilters from "../helpers/sql";
 
 class BaseModel {
   /** Define the table name and column mappings in the subclass */
+  static dbSchema = "public"; //default schema that tables will be stored under
   static tableName = null;
   static defaultMapping = {};
-  static columnMappings = this.createColumnMapping();
-  static dbSchema = "public"; //default schema that tables will be stored under
-  static primaryKeyColumn = this.getPrimaryKeyColumns();
+  static columnMappings = (async () => {
+    return await this.createColumnMapping();
+  })();
+
+  static primaryKeyColumn = (async () => {
+    return await this.getPrimaryKeyColumns();
+  })();
+
   /** Create a new record.
    *
    * @param {Object} data - Object containing the record details.
@@ -23,34 +29,38 @@ class BaseModel {
    * @returns {Object} - The newly created record.
    * @throws {BadRequestError} - If a duplicate record exists.
    */
-  static async create(data, primaryKeyColumn) {
+  static async create(data) {
     if (!this.tableName) {
-      throw new Error("Table name not defined in subclass.");
+      return; //do nothing if not a subclass or falsy tableName
     }
 
-    // Check for duplicates
-    const duplicateCheck = await _query(
-      `SELECT ${primaryKeyColumn}
-       FROM ${this.tableName}
-       WHERE ${primaryKeyColumn} = $1`,
-      [data[primaryKeyColumn]]
+    // Check for duplicates //TODO: replace this this.duplicateCheck() later
+    const primaryKeyMapping = Object.fromEntries(
+      this.primaryKeyColumn.map((key, idx) => [
+        key,
+        Object.keys(data).filter((key) => this.primaryKeyColumn.includes(key))[
+          idx
+        ],
+      ])
     );
 
-    if (duplicateCheck.rows[0]) {
-      throw new BadRequestError(`Duplicate entry: ${data[primaryKeyColumn]}`);
-    }
+    //check for duplicates => throws error if duplicate found
+    this.duplicateCheck(this.tableName, primaryKeyMapping, true);
+
+    //generate whereClauses, values for dynamic query string
+    const { whereClause, values } = sqlForConditionFilters(
+      data,
+      this.defaultMapping,
+      ", "
+    );
 
     // Insert record
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-
-    const query = `
-      INSERT INTO ${this.tableName}
-      (${keys.join(", ")})
-      VALUES (${keys.map((_, idx) => `$${idx + 1}`).join(", ")})
-      RETURNING *`;
-
-    const result = await _query(query, values);
+    const result = await db.query(
+      `INSERT INTO ${this.tableName} (${whereClause}) VALUES (${values.map(
+        (_, i) => `$${i + 1}`
+      )}) RETURNING ${whereClause}`,
+      values
+    );
     return this._mapToCamelCase(result.rows[0]);
   }
 
@@ -65,7 +75,9 @@ class BaseModel {
       throw new Error("Table name not defined in subclass.");
     }
 
-    let query = `SELECT * FROM ${this.tableName}`;
+    let query = `SELECT ${Object.values(this.columnMappings)} FROM ${
+      this.tableName
+    }`;
     let whereClauses = [];
     let values = [];
 
@@ -205,7 +217,7 @@ class BaseModel {
 
     return result.rows[0];
   }
-  static async complexFind(searchParams) {
+  static async complexFind(searchParams, returnRowsArray = false) {
     // Validate input and ensure tableName is defined
     if (
       !this.tableName ||
@@ -216,20 +228,18 @@ class BaseModel {
     }
 
     // Generate WHERE clause and values
-    const { setCols: whereClause, values: searchValues } = sqlForPartialUpdate(
-      searchParams,
-      this.columnMappings
-    );
+    const { setCols: whereClause, values: searchValues } =
+      sqlForConditionFilters(searchParams, this.columnMappings);
 
     // Construct the SELECT statement
     const queryStatement = `
-      SELECT * FROM ${this.tableName}
+      SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName}
       WHERE ${whereClause}`;
 
     // Execute the query
     const result = await _query(queryStatement, searchValues);
 
-    return result.rows;
+    return returnRowsArray ? result.rows : result.rows[0];
   }
 
   /** Helper to convert snake_case to camelCase in result objects. */
@@ -348,16 +358,19 @@ class BaseModel {
       return result.rows.map((row) => row.attname);
     }
   }
-  static async duplicateCheck(primaryKeysObj, tableName = this.tableName, throwErrorIfDuplicate=True) {
+  static async duplicateCheck(
+    primaryKeysObj,
+    tableName = this.tableName,
+    throwErrorIfDuplicate = True
+  ) {
     if (!tableName || tableName === null) return; //do nothing if falsy/null tableName
 
-    const duplicateQuery = await BaseModel.complexFind(primaryKeysObj)
+    const duplicateQuery = await BaseModel.complexFind(primaryKeysObj, false);
 
     if (duplicateQuery.rows[0] && throwErrorIfDuplicate) {
       throw new BadRequestError(`Duplicate found: ${duplicateQuery.rows[0]}`);
-    }
-    else {
-      return duplicateQuery.rows[0]
+    } else {
+      return duplicateQuery.rows[0];
     }
   }
 }

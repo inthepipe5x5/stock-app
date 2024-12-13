@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { UnauthorizedError } from "../expressError";
 import User from "../models/user";
 import parseTimeString from "./parseTimeString";
-import { SECRET_KEY } from "../config";
+import { SECRET_KEY } from "../config/config";
 
 const createToken = ({
   oauthProviderId,

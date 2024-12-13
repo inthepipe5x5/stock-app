@@ -16,7 +16,7 @@ class ProductInventories extends BaseModel {
   /** Fetch all items for a specific inventory by `inventory_id`. */
   static async getItems(inventoryId) {
     const result = await db.query(
-      `SELECT *
+      `SELECT ${Object.values(this.columnMappings)}
        FROM ProductItems
        WHERE inventory_id = $1`,
       [inventoryId]

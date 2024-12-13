@@ -2,8 +2,9 @@
 
 /** Shared config for application; can be required many places. */
 
-require("dotenv").config();
+import {config} from "dotenv"
 import "colors";
+import getTableNames from "../helpers/dbTables"
 
 const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 

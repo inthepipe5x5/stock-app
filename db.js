@@ -1,7 +1,7 @@
 "use strict";
 /** Database setup for stockapp. */
 import { Client } from "pg";
-import { getDatabaseUri } from "./config";
+import { getDatabaseUri } from "./config/config";
 
 let db;
 

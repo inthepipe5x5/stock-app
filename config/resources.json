@@ -1,0 +1,34 @@
+{
+  "roles": [
+    {
+      "name": "admin",
+      "roleId": 1
+    },
+    {
+      "name": "manager",
+      "roleId": 2
+    },
+    {
+      "name": "member",
+      "roleId": 3
+    },
+    {
+      "name": "guest",
+      "roleId": 4
+    }
+  ],
+  "resources": [
+    "Users",
+    "Households",
+    "ProductItems",
+    "ProductInventories",
+    "Vendors",
+    "Tasks"
+  ],
+  "ownership": [
+    "TaskAssignments",
+    "RelatedVendors",
+    "UserInventories",
+    "UserHouseholds"
+  ]
+}

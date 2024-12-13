@@ -14,6 +14,7 @@ CREATE TYPE draft_status AS ENUM('draft', 'archived', 'deleted', 'confirmed');
 CREATE TYPE role_access AS ENUM(
     'guest', -- view-only access
     'member', -- edit access: can create tasks, complete, edit, and assign tasks
+    'manager', --can do all CRUD actions on own household and related resources
     'admin' -- on top of member privileges, can create and manage inventories
 );
 
@@ -28,7 +29,7 @@ CREATE TABLE
         oauth_provider VARCHAR(255), -- e.g., 'google', 'github'
         oauth_provider_id VARCHAR(255) UNIQUE, -- e.g., provider-specific user ID
         -- Refresh token
-        refresh_token TEXT UNIQUE,
+        refresh_token TEXT UNIQUE, --jwt id of last dispensed refresh token
         refresh_token_expires_at TIMESTAMP WITH TIME ZONE
     );
 

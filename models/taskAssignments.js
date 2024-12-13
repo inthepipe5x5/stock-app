@@ -29,7 +29,7 @@ class TaskAssignments extends BaseModel {
   /** Get all assignments for a specific task. */
   static async findAssignmentsByTask(taskId) {
     const result = await db.query(
-      `SELECT * FROM ${this.tableName}
+      `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName}
        WHERE task_id = $1`,
       [taskId]
     );

@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 
 const express = require("express");
 const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
-const { BadRequestError } = require("../expressError");
+const { BadRequestError } = require("../expressError").default;
 const User = require("../models/user").default;
 const { createAccessToken } = require("../helpers/tokens").default;
 const userNewSchema = require("../schemas/userNew.json");

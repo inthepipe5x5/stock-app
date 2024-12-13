@@ -4,13 +4,18 @@ import db from "../db.js";
 import { compare, hash } from "bcrypt";
 import BaseModel from "./basemodel.js";
 import sqlForConditionFilters from "../helpers/sql.js";
-import { convertSnakeToCamel } from "../helpers/caseConverter.js";
+import {
+  convertCamelToSnake,
+  convertSnakeToCamel,
+} from "../helpers/caseConverter.js";
 import {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
 } from "../expressError.js";
-import { BCRYPT_WORK_FACTOR } from "../config.js";
+import { BCRYPT_WORK_FACTOR } from "../config/config.js";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /** Related functions for users. */
 class User extends BaseModel {
@@ -27,39 +32,111 @@ class User extends BaseModel {
     accum[convertSnakeToCamel(current)] = current;
   }, {});
 
-  /** Authenticate user with email and password.
+  /** Authenticate user with authData object.
    *
    * Returns { id, name, email, oauth_provider, oauth_provider_id, refresh_token, refresh_token_expires_at }
    *
    * Throws UnauthorizedError if user not found or wrong password.
    **/
-  static async authenticate(email, password) {
-    const result = await db.query(
-      `SELECT id,
-              name,
-              email,
-              password,
-              oauth_provider,
-              oauth_provider_id,
-              refresh_token,
-              refresh_token_expires_at
-       FROM Users
-       WHERE email = $1`,
-      [email]
-    );
+  static async authenticate({ authData }) {
+    const { email, oauthProvider, oauthProviderId, idToken } = authData;
 
-    const user = result.rows[0];
-
-    if (user) {
-      const isValid = await compare(password, user.password);
-      if (isValid) {
-        delete user.password;
-        return user;
-      }
+    // Validate required fields
+    const requiredKeys = ["email", "oauthProvider", "oauthProviderId", "idToken"];
+    if (!requiredKeys.every((key) => key in authData)) {
+      throw new BadRequestError("Invalid authentication attempt");
     }
 
-    throw new UnauthorizedError("Invalid email/password");
+    // Validate ID Token with the respective OAuth provider
+    let isValidToken = false;
+    if (oauthProvider === "google") {
+      isValidToken = await this.validateGoogleToken(idToken, oauthProviderId);
+    } else if (oauthProvider === "apple") {
+      isValidToken = await this.validateAppleToken(idToken, oauthProviderId);
+    }
+
+    if (!isValidToken) {
+      throw new UnauthorizedError("Invalid OAuth token");
+    }
+
+    // Find the user in the database
+    const results = this.complexFind({ email, oauthProvider, oauthProviderId });
+    const user = results.length > 0 ? results[0] : null;
+
+    if (!user) {
+      throw new UnauthorizedError("User not found");
+    }
+
+    // Check token expiration
+    if (new Date() > user.refresh_token_expires_at) {
+      throw new UnauthorizedError("Refresh token expired");
+    }
+
+    return user;
   }
+
+  /**Google Token Validation:
+
+    Validate the @param {*} idToken Google’s @function verifyIdToken method.
+    Match the token’s sub (subject) with the oauthProviderId.
+   * 
+   *  
+   * @param {*} expectedOauthProviderId 
+   * @returns {true, false} depending on validity of token 
+   */
+
+  static async validateGoogleToken(idToken, expectedOauthProviderId) {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: GOOGLE_CLIENT_ID, // Ensure the ID token is meant for your app
+      });
+
+      const payload = ticket.getPayload();
+      return payload.sub === expectedOauthProviderId; // Compare with the expected OAuth provider ID
+    } catch (err) {
+      console.error("Google token validation error:", err);
+      return false;
+    }
+  }
+  
+  /*Apple Token Validation Function:
+
+    Fetch Apple’s public keys from their API.
+    Use the appropriate key to verify the ID token.
+    Match the token’s sub with the oauthProviderId.
+   @returns {true, false} depending on validity of token 
+
+  */ 
+  static async validateAppleToken(idToken, expectedOauthProviderId) {
+    try {
+      // Fetch Apple's public keys
+      const { data: keys } = await axios.get(APPLE_PUBLIC_KEY_URL);
+      const decoded = jwt.decode(idToken, { complete: true });
+
+      if (!decoded) {
+        throw new Error("Invalid Apple ID token");
+      }
+
+      const kid = decoded.header.kid;
+      const appleKey = keys.keys.find((key) => key.kid === kid);
+
+      if (!appleKey) {
+        throw new Error("Apple public key not found");
+      }
+
+      const publicKey = jwt.getPublicKey(appleKey);
+      const verified = jwt.verify(idToken, publicKey, {
+        algorithms: ["RS256"],
+      });
+
+      return verified.sub === expectedOauthProviderId; // Compare with the expected OAuth provider ID
+    } catch (err) {
+      console.error("Apple token validation error:", err);
+      return false;
+    }
+  }
+}
 
   /** Register user with data.
    *
@@ -70,10 +147,11 @@ class User extends BaseModel {
 
   static async register(newUserData) {
     if (!newUserData || newUserData === null)
-      return; //do nothing if falsy data;
+      throw new BadRequestError("Bad register request.");
+    //throw bad request if falsy data;
     else {
       try {
-        //grab the pk values from the newUserData to be
+        //grab the pk values from the newUserData to be a primary key search object
         const primaryKeyMapping = Object.fromEntries(
           this.primaryKeyColumn.map((key, idx) => [
             key,
@@ -86,22 +164,28 @@ class User extends BaseModel {
         //check for duplicates => throws error if duplicate found
         this.duplicateCheck(this.tableName, primaryKeyMapping, true);
 
-        const { whereClause, values } = sqlForConditionFilters(
-          newUserData,
-          this.defaultMapping,
-          ", "
-        );
+        //convert to snakeCaseKeys
+        const snake_case_data = this._mapToSnakeCase(data);
 
-        const result = await db.query(
-          `INSERT INTO Users (${whereClause}) VALUES (${values.map(
-            (_, i) => `$${i + 1}`
-          )}) RETURNING ${whereClause}`,
-          values
-        );
+        //create new user entry
+        return this.create(snake_case_data);
 
-        return result.rows[0];
+        // const { whereClause, values } = sqlForConditionFilters(
+        //   newUserData,
+        //   this.defaultMapping,
+        //   ", "
+        // );
+
+        // const result = await db.query(
+        //   `INSERT INTO Users (${whereClause}) VALUES (${values.map(
+        //     (_, i) => `$${i + 1}`
+        //   )}) RETURNING ${whereClause}`,
+        //   values
+        // );
       } catch (error) {
-        console.error(`Error registering new user ${primaryKeyMapping}: ${e}`);
+        const errMessage = `Error registering new user ${primaryKeyMapping}: ${e}`;
+        console.error(errMessage);
+        throw new Error(errMessage);
       }
     }
   }

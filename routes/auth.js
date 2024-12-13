@@ -6,12 +6,14 @@ import { validate } from "jsonschema";
 
 import { authenticate, register } from "../models/user";
 import { Router } from "express";
-const router = new Router();
 import { createAccessToken } from "../helpers/tokens";
 import userAuthSchema from "../schemas/userAuth.json";
 import userRegisterSchema from "../schemas/userRegister.json";
 import { BadRequestError } from "../expressError";
 import parseTimeString from "../helpers/parseTimeString";
+import User from "../models/user";
+
+const router = new Router();
 
 /** POST /auth/token:  { username, password } => { token }
  *
@@ -21,11 +23,14 @@ import parseTimeString from "../helpers/parseTimeString";
  */
 
 router.post("/token", async function (req, res, next) {
-  const { oauthProviderId } = req.body; 
-
+  const { email, oauthProvider, oauthProviderId } = req.body;
+  const user = User.complexFind({ email, oauthProvider, oauthProviderId });
+  if (!user || !email || !oauthProvider || !oauthProviderId) {
+    throw new BadRequestError("Invalid /token request");
+  }
   // Create access and refresh tokens
   const accessToken = jwt.sign({ oauthProviderId }, SECRET_KEY, {
-    expiresIn: parseTimeString(process.env.ACCESS_TOKEN_DURATION), 
+    expiresIn: parseTimeString(process.env.ACCESS_TOKEN_DURATION),
   });
   const refreshToken = jwt.sign({ oauthProviderId }, SECRET_KEY, {
     expiresIn: parseTimeString(process.env.REFRESH_TOKEN_DURATION),

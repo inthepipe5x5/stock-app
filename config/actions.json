@@ -1,0 +1,9 @@
+{
+  "actions": ["create", "read", "update", "delete"],
+  "options": {
+    "subject": ["resource", "role"],
+    "subjectAttribute": ["info", "relations", "status"],
+    "subjectAuthor": ["any", "others", "own", "invite"],
+    "status": ["any", "confirmed", "draft", "deleted"]
+  }
+}
