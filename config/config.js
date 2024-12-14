@@ -2,9 +2,11 @@
 
 /** Shared config for application; can be required many places. */
 
-import {config} from "dotenv"
+import { config } from "dotenv";
 import "colors";
-import getTableNames from "../helpers/dbTables"
+import getTableNames from "../helpers/dbTables";
+
+config()
 
 const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 
@@ -72,10 +74,4 @@ getTableNames()
   })
   .catch((e) => console.error(`Error getting table names: ${e}`));
 
-export {
-  SECRET_KEY,
-  PORT,
-  BCRYPT_WORK_FACTOR,
-  getDatabaseUri,
-  dbConfigObj,
-};
+export { SECRET_KEY, PORT, BCRYPT_WORK_FACTOR, getDatabaseUri, dbConfigObj };
