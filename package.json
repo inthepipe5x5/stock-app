@@ -14,12 +14,12 @@
     "node": ">=18"
   },
   "jest": {
+    "testEnvironment": "node",
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "config.js"
+      "/node_modules/"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!(your-dependency)/)"

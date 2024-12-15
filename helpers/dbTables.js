@@ -1,6 +1,5 @@
 import { db } from "../db";
-import { defaultTables } from "../constants";
-
+import { defaultTables } from "../config/constants";
 /** Helper function for dynamically retrieving the list of tables from the database
  *
  * @param {array} tables - List of tables to retrieve. Defaults to defaultTables.

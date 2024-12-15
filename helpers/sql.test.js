@@ -1,7 +1,9 @@
 "use strict";
 
 import sqlForConditionFilters from "./sql.js";
+import BadRequestError from "../expressError.js"
 console.log(sqlForConditionFilters); // Should log a function
+console.log(BadRequestError); // Should log a function
 
 describe("sqlForConditionFilters", function () {
   test("works: 1 item with default separator (AND)", function () {
@@ -38,10 +40,11 @@ describe("sqlForConditionFilters", function () {
     });
   });
 
-  test("throws error when no filters are provided", function () {
+
+  test("throws BadRequestError when no filters are provided", () => {
     expect(() => {
       sqlForConditionFilters({}, { f1: "f1" });
-    }).toThrowError(BadRequestError("No filters provided"));
+    }).toThrowError(BadRequestError, "No filters provided");
   });
 
   test("works: unknown field (uses key as is)", function () {

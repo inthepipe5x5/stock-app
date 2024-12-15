@@ -1,4 +1,4 @@
-import { BadRequestError } from "../expressError";
+import BadRequestError from "../expressError";
 
 /**
  * Helper for making selective update queries.
@@ -18,19 +18,22 @@ import { BadRequestError } from "../expressError";
  *     values: ['Aliya', 32] }
  */
 
-const sqlForConditionFilters = (dataToFilter, jsToSql, filterSeparator=" AND ") =>  {
+const sqlForConditionFilters = (
+  dataToFilter,
+  jsToSql,
+  filterSeparator = " AND "
+) => {
   const keys = Object.keys(dataToFilter);
   if (keys.length === 0) throw new BadRequestError("No filters provided");
 
-  const filters = keys.map((key, idx) =>
-    `"${jsToSql[key] || key}"=$${idx + 1}`
+  const filters = keys.map(
+    (key, idx) => `"${jsToSql[key] || key}"=$${idx + 1}`
   );
 
   return {
     whereClause: filters.join(filterSeparator),
     values: Object.values(dataToFilter),
   };
-}
+};
 
-
-export default sqlForConditionFilters ;
+export default sqlForConditionFilters;

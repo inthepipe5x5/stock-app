@@ -136,7 +136,7 @@ class User extends BaseModel {
       return false;
     }
   }
-}
+
 
   /** Register user with data.
    *

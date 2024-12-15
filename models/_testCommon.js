@@ -1,5 +1,7 @@
+//REFACTORED INTO /__tests__/setup/test
+
 import { query, end } from "../db.js";
-import getTableNames from './getTableNames';
+import getTableNames from "../helpers/dbTables.js";
 
 // Placeholder for test data
 const testUserIds = [];
@@ -9,8 +11,6 @@ const testItemIds = [];
 const testVendorIds = [];
 const testTaskIds = [];
 const testAssignmentIds = [];
-
-
 
 beforeAll(async () => {
   const dbTableList = await getTableNames();

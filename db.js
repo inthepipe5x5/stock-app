@@ -1,23 +1,30 @@
 "use strict";
 /** Database setup for stockapp. */
 import { Client } from "pg";
-import { getDatabaseUri } from "./config/config";
+import { getDatabaseUri, dbConfigObj } from "./config/config";
 
 let db;
-
-if (process.env.NODE_ENV === "production") {
+let ENV = process.env.NODE_ENV;
+if (ENV === "production") {
   db = new Client({
-    connectionString: getDatabaseUri(),
+    connectionString: getDatabaseUri(dbConfigObj(ENV)),
     ssl: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+    },
   });
 } else {
   db = new Client({
-    connectionString: getDatabaseUri()
+    connectionString: getDatabaseUri(dbConfigObj(ENV)),
   });
 }
 
-db.connect();
+db.connect()
+  // .then(() => console.log(`Connected to the database: ${process.env.DB_NAME}`))
+  // .catch((err) =>
+  //   console.error(
+  //     `Error connecting to the database: ${process.env.DB_NAME}`,
+  //     err
+  //   )
+  // );
 
 export default db;

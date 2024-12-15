@@ -44,7 +44,7 @@ class ForbiddenError extends ExpressError {
   }
 }
 
-export default {
+export {
   ExpressError,
   NotFoundError,
   UnauthorizedError,
