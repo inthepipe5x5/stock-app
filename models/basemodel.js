@@ -108,7 +108,7 @@ class BaseModel {
     }
 
     const result = await _query(
-      `SELECT * FROM ${this.tableName} WHERE id = $1`,
+      `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName} WHERE id = $1`,
       [id]
     );
 
@@ -143,7 +143,7 @@ class BaseModel {
       UPDATE ${this.tableName}
       SET ${setCols}
       WHERE id = ${idVarIdx}
-      RETURNING *`;
+      RETURNING ${setCols}`;
 
     const result = await _query(query, [...values, id]);
     const record = result.rows[0];
@@ -205,7 +205,7 @@ class BaseModel {
     const queryStatement = `
       DELETE FROM ${this.tableName}
       WHERE ${whereClause}
-      RETURNING *`;
+      RETURNING ${Object.values(this.columnMappings)}`;
 
     // Execute the query
     const result = await _query(queryStatement, searchValues);
