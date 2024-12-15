@@ -161,3 +161,31 @@ CREATE INDEX idx_taskassignments_task ON TaskAssignments (task_id);
 
 -- Indexes for ProductInventories
 CREATE INDEX idx_productinventories_household ON ProductInventories (household_id);
+
+-- Function to update the updated_dt field
+CREATE OR REPLACE FUNCTION update_updated_dt()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_dt = NOW();
+    RETURN NEW;
+END;
+$$
+ LANGUAGE plpgsql;
+
+-- Trigger for Tasks table
+CREATE TRIGGER update_tasks_updated_dt
+BEFORE UPDATE ON Tasks
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_dt();
+
+-- Trigger for ProductItems table
+CREATE TRIGGER update_productitems_updated_dt
+BEFORE UPDATE ON ProductItems
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_dt();
+
+-- Trigger for TaskAssignments table
+CREATE TRIGGER update_taskassignments_updated_dt
+BEFORE UPDATE ON TaskAssignments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_dt();

@@ -11,7 +11,7 @@ const defaultTestEnvVars = {
   DB_USERNAME: "postgres",
   DB_PW: "stringpassword",
   DB_NAME: "stockapp",
-  TEST_DB_NAME: "stockapp_database",
+  TEST_DB_NAME: "stockapp_test",
 };
 
 /*****************************************************************************************************************
@@ -33,14 +33,14 @@ const testData = {
       email: "user1@example.com",
       oauth_provider: "google",
       oauth_provider_id: "google-id-1",
-      oauth_provider_expires_in: createExpiration(),
+      oauth_provider_expires_in: createExpiration(), //helper function to return str: now + token expiration time in NumericDate UTC format
     },
     {
       name: "User2",
       email: "user2@example.com",
       oauth_provider: "apple",
       oauth_provider_id: "apple-id-2",
-      oauth_provider_expires_in: createExpiration(),
+      oauth_provider_expires_in: createExpiration(), //helper function to return str: now + token expiration time in NumericDateUTC format
     },
   ],
   Households: [
