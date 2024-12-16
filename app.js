@@ -19,7 +19,9 @@ app.use(cors());
 app.use(json());
 app.use(morgan("tiny"));
 app.use(cookieParser()) //use cookie parser to handle http only cookies
-app.use(authenticateJWT);
+//supabase auth middleware
+app.use(authenticateAccessToken);
+app.use(refreshAccessToken);
 
 app.use("/auth", authRoutes);
 app.use("/companies", companiesRoutes);

@@ -62,14 +62,6 @@ CREATE TABLE
         draft_status draft_status DEFAULT 'confirmed' -- store the "draft_status" here, e.g., archived, deleted, confirmed, etc. Don't show to users
     );
 
--- UserInventories join table
-CREATE TABLE
-    UserInventories (
-        user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
-        inventory_id INTEGER REFERENCES ProductInventories (id) ON DELETE CASCADE,
-        access_level role_access DEFAULT 'guest',
-        PRIMARY KEY (user_id, inventory_id)
-    );
 
 -- ProductVendors table
 CREATE TABLE
@@ -136,18 +128,40 @@ CREATE TABLE
         draft_status draft_status DEFAULT 'draft'
     );
 
--- TaskAssignments table
-CREATE TABLE
-    TaskAssignments (
-        id SERIAL PRIMARY KEY,
-        task_id INTEGER REFERENCES Tasks (id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES Users (id) ON DELETE CASCADE,
-        product_id INTEGER REFERENCES ProductItems (id) ON DELETE SET NULL,
-        created_by INTEGER NOT NULL REFERENCES Users (id),
-        created_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_dt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        last_updated_by INTEGER REFERENCES Users (id)
-    );
+
+-- UserHouseholds: Many-to-Many relationship between Users and Households
+CREATE TABLE UserHouseholds (
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    household_id UUID REFERENCES Households(id) ON DELETE CASCADE,
+    role role_access DEFAULT 'guest',
+    PRIMARY KEY (user_id, household_id)
+);
+
+-- UserInventories: Many-to-Many relationship between Users and Inventories
+CREATE TABLE UserInventories (
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    inventory_id UUID REFERENCES Inventories(id) ON DELETE CASCADE,
+    access_level role_access DEFAULT 'guest',
+    PRIMARY KEY (user_id, inventory_id)
+);
+
+-- -- HouseholdInventories: One-to-Many relationship between Households and Inventories
+-- CREATE TABLE HouseholdInventories (
+--     household_id UUID REFERENCES Households(id) ON DELETE CASCADE,
+--     inventory_id UUID REFERENCES Inventories(id) ON DELETE CASCADE,
+--     PRIMARY KEY (household_id, inventory_id)
+-- );
+
+-- TaskAssignments: Many-to-Many relationship for Task assignments
+CREATE TABLE TaskAssignments (
+    task_id UUID REFERENCES Tasks(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    assigned_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (task_id, user_id)
+);
+
+
 
 -- Indexes for UserHouseholds
 CREATE INDEX idx_userhouseholds_user ON UserHouseholds (user_id);

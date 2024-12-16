@@ -8,6 +8,9 @@ import {
 } from "../helpers/caseConverter";
 import sqlForConditionFilters from "../helpers/sql";
 
+/* The above class `BaseModel` provides methods for interacting with a database table, including
+creating, finding, updating, and deleting records, as well as handling duplicates and complex
+queries. */
 class BaseModel {
   /** Define the table name and column mappings in the subclass */
   static dbSchema = "public"; //default schema that tables will be stored under
@@ -45,7 +48,7 @@ class BaseModel {
     );
 
     //check for duplicates => throws error if duplicate found
-    this.duplicateCheck(this.tableName, primaryKeyMapping, true);
+    await this.duplicateCheck(this.tableName, primaryKeyMapping, true);
 
     //generate whereClauses, values for dynamic query string
     const { whereClause, values } = sqlForConditionFilters(
@@ -108,7 +111,9 @@ class BaseModel {
     }
 
     const result = await _query(
-      `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName} WHERE id = $1`,
+      `SELECT ${Object.values(this.columnMappings)} FROM ${
+        this.tableName
+      } WHERE id = $1`,
       [id]
     );
 
@@ -358,10 +363,28 @@ class BaseModel {
       return result.rows.map((row) => row.attname);
     }
   }
+  /**
+   * This function checks for duplicates in a database table based on primary keys and throws an error if
+   * a duplicate is found.
+   * @param primaryKeysObj - The `primaryKeysObj` parameter is an object that contains the primary key
+   * values to check for duplicates in the database table. It is used to query the database and determine
+   * if there are any existing records with the same primary key values.
+   * @param [tableName] - The `tableName` parameter in the `duplicateCheck` method is used to specify the
+   * name of the table in the database where the duplicate check will be performed. If a `tableName` is
+   * provided, the method will check for duplicates in that specific table. If no `tableName` is provided
+   * or if
+   * @param [throwErrorIfDuplicate=true] - The `throwErrorIfDuplicate` parameter is a boolean flag that
+   * determines whether an error should be thrown if a duplicate entry is found in the database. If
+   * `throwErrorIfDuplicate` is set to `true`, the method will throw a `BadRequestError` with a message
+   * indicating that a duplicate entry
+   * @returns If a duplicate entry is found and `throwErrorIfDuplicate` is set to true, a
+   * `BadRequestError` with the message "Duplicate found: [duplicate entry details]" will be thrown.
+   * Otherwise, the first duplicate entry found will be returned.
+   */
   static async duplicateCheck(
     primaryKeysObj,
     tableName = this.tableName,
-    throwErrorIfDuplicate = True
+    throwErrorIfDuplicate = true
   ) {
     if (!tableName || tableName === null) return; //do nothing if falsy/null tableName
 
@@ -372,6 +395,91 @@ class BaseModel {
     } else {
       return duplicateQuery.rows[0];
     }
+  }
+
+  /** Fetch related records from a join table.
+   *
+   * @param {Object} keys - The keys to filter the join table.
+   * @param {string[]} returnColumns - The columns to select.
+   *
+   * @returns {Array<Object>} - The related records.
+   */
+  static async findRelated(keys, returnColumns = []) {
+    if (!this.tableName) {
+      // throw new Error("Table name not defined in subclass.");
+      return; //do nothing if falsy tableName
+    }
+
+    const { whereClause, values } = sqlForConditionFilters(
+      keys,
+      this.columnMappings,
+      " AND "
+    );
+    const selectColumns = returnColumns.length ? returnColumns.join(", ") : "*";
+
+    const query = `SELECT ${selectColumns} FROM ${this.tableName} WHERE ${whereClause}`;
+    const result = await _query(query, values);
+
+    return result.rows.map(this._mapToCamelCase);
+  }
+
+  /** Get a record by its composite key.
+   *
+   * @param {Object} keys - The composite keys for the record.
+   *
+   * @returns {Object} - The matching record.
+   * @throws {NotFoundError} - If the record is not found.
+   */
+  static async getByCompositeKey(keys) {
+    if (!this.tableName) {
+      // throw new Error("Table name not defined in subclass.");
+      return; //do nothing if falsy tableName
+    }
+
+    const { whereClause, values } = sqlForConditionFilters(
+      keys,
+      this.columnMappings,
+      " AND "
+    );
+
+    const query = `SELECT ${Object.values(this.columnMappings)} FROM ${
+      this.tableName
+    } WHERE ${whereClause}`;
+    const result = await _query(query, values);
+
+    if (!result.rows[0]) {
+      throw new NotFoundError("No record found with provided keys.");
+    }
+
+    return this._mapToCamelCase(result.rows[0]);
+  }
+
+  /** Delete a record by its composite key. USE FOR JOIN TABLES
+   *
+   * @param {Object} keys - The composite keys for the record.
+   *
+   * @throws {NotFoundError} - If the record is not found.
+   */
+  static async deleteByCompositeKey(keys) {
+    if (!this.tableName) {
+      // throw new Error("Table name not defined in subclass.");
+      return; //do nothing if falsy tableName
+    }
+
+    const { whereClause, values } = sqlForConditionFilters(
+      keys,
+      this.columnMappings,
+      " AND "
+    );
+
+    const query = `DELETE FROM ${this.tableName} WHERE ${whereClause} RETURNING *`;
+    const result = await _query(query, values);
+
+    if (!result.rows[0]) {
+      throw new NotFoundError("No record found with provided keys.");
+    }
+
+    return this._mapToCamelCase(result.rows[0]);
   }
 }
 export default BaseModel;
