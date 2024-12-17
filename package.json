@@ -31,6 +31,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.47.7",
     "accesscontrol": "^2.2.1",
+    "another-json-schema": "^4.0.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",
