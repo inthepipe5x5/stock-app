@@ -32,7 +32,7 @@ class BaseModel {
    * @returns {Object} - The newly created record.
    * @throws {BadRequestError} - If a duplicate record exists.
    */
-  static async create(data) {
+  static async create(data, handleConflictWithUpdate=false) {
     if (!this.tableName) {
       return; //do nothing if not a subclass or falsy tableName
     }
@@ -61,7 +61,8 @@ class BaseModel {
     const result = await db.query(
       `INSERT INTO ${this.tableName} (${whereClause}) VALUES (${values.map(
         (_, i) => `$${i + 1}`
-      )}) RETURNING ${whereClause}`,
+      )}) RETURNING ${whereClause}
+      ON CONFLICT DO ${handleConflictWithUpdate? "UPDATE" : "NOTHING"}`,
       values
     );
     return this._mapToCamelCase(result.rows[0]);
@@ -133,7 +134,7 @@ class BaseModel {
    * @returns {Object} - The updated record.
    * @throws {NotFoundError} - If the record is not found.
    */
-  static async update(id, data) {
+  static async update(id, data, handleConflictWithInsert=true) {
     if (!this.tableName) {
       throw new Error("Table name not defined in subclass.");
     }
@@ -148,7 +149,9 @@ class BaseModel {
       UPDATE ${this.tableName}
       SET ${setCols}
       WHERE id = ${idVarIdx}
-      RETURNING ${setCols}`;
+      RETURNING ${setCols}
+      ON CONFLICT DO ${handleConflictWithInsert ? "INSERT":"NOTHING"}
+      `;
 
     const result = await _query(query, [...values, id]);
     const record = result.rows[0];
@@ -234,7 +237,7 @@ class BaseModel {
 
     // Generate WHERE clause and values
     const { setCols: whereClause, values: searchValues } =
-      sqlForConditionFilters(searchParams, this.columnMappings);
+      sqlForConditionFilters(searchParams, this.columnMappings, " AND ");
 
     // Construct the SELECT statement
     const queryStatement = `
