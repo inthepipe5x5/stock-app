@@ -8,13 +8,13 @@ import { UnauthorizedError } from "../expressError";
 import ProductInventories from "../models/productInventories";
 import UserHouseholds from "../models/userhouseholds";
 import Household from "../models/households";
-const router = express.Router();
+const authRoutes = express.Router();
 
 /** POST /refresh: Refresh access token using refresh token.
  *
  * Returns: { accessToken, user }
  */
-router.post("/refresh", async (req, res, next) => {
+authRoutes.post("/refresh", async (req, res, next) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
@@ -50,7 +50,7 @@ router.post("/refresh", async (req, res, next) => {
  *
  * Returns: { householdId, inventoryId }
  */
-router.post("/newuser", async (req, res, next) => {
+authRoutes.post("/newuser", async (req, res, next) => {
   const { userId } = res.locals.user;
 
   try {
@@ -94,4 +94,4 @@ router.post("/newuser", async (req, res, next) => {
   }
 });
 
-export default router;
+export default authRoutes;
