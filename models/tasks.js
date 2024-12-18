@@ -1,6 +1,6 @@
 "use strict";
 
-import BaseModel from "./basemodel";
+import BaseModel from "./basemodel.js";
 
 class Tasks extends BaseModel {
   static tableName = "Tasks";

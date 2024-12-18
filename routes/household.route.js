@@ -5,7 +5,7 @@
 import jsonschema from "jsonschema";
 
 import { Router } from "express";
-import { BadRequestError, NotFoundError } from "../expressError";
+import { BadRequestError, NotFoundError } from "../expressError.js";
 import householdNewSchema from "../schemas/householdNew.json";
 import householdUpdateSchema from "../schemas/householdUpdate.json";
 import householdSearchSchema from "../schemas/householdSearch.json";

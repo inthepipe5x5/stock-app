@@ -1,6 +1,6 @@
 "use strict";
 
-import BaseModel from "./basemodel";
+import BaseModel from "./basemodel.js";
 
 class ProductInventories extends BaseModel {
   static tableName = "ProductInventories";

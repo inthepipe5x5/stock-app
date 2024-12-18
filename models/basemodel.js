@@ -1,17 +1,19 @@
 "use strict";
 
-import { query as _query } from "../db";
-import { BadRequestError, NotFoundError } from "../expressError";
+import db from "../db.js";
+import { BadRequestError, NotFoundError } from "../expressError.js";
 import {
   convertCamelToSnake,
   convertSnakeToCamel,
-} from "../helpers/caseConverter";
-import sqlForConditionFilters from "../helpers/sql";
+} from "../helpers/caseConverter.js";
+import sqlForConditionFilters from "../helpers/sql.js";
+
+const { query: _query } = db;
 
 /* The above class `BaseModel` provides methods for interacting with a database table, including
 creating, finding, updating, and deleting records, as well as handling duplicates and complex
 queries. */
-class BaseModel {
+export default class BaseModel {
   /** Define the table name and column mappings in the subclass */
   static dbSchema = "public"; //default schema that tables will be stored under
   static tableName = null;
@@ -32,7 +34,7 @@ class BaseModel {
    * @returns {Object} - The newly created record.
    * @throws {BadRequestError} - If a duplicate record exists.
    */
-  static async create(data, handleConflictWithUpdate=false) {
+  static async create(data, handleConflictWithUpdate = false) {
     if (!this.tableName) {
       return; //do nothing if not a subclass or falsy tableName
     }
@@ -62,7 +64,7 @@ class BaseModel {
       `INSERT INTO ${this.tableName} (${whereClause}) VALUES (${values.map(
         (_, i) => `$${i + 1}`
       )}) RETURNING ${whereClause}
-      ON CONFLICT DO ${handleConflictWithUpdate? "UPDATE" : "NOTHING"}`,
+      ON CONFLICT DO ${handleConflictWithUpdate ? "UPDATE" : "NOTHING"}`,
       values
     );
     return this._mapToCamelCase(result.rows[0]);
@@ -134,7 +136,7 @@ class BaseModel {
    * @returns {Object} - The updated record.
    * @throws {NotFoundError} - If the record is not found.
    */
-  static async update(id, data, handleConflictWithInsert=true) {
+  static async update(id, data, handleConflictWithInsert = true) {
     if (!this.tableName) {
       throw new Error("Table name not defined in subclass.");
     }
@@ -150,7 +152,7 @@ class BaseModel {
       SET ${setCols}
       WHERE id = ${idVarIdx}
       RETURNING ${setCols}
-      ON CONFLICT DO ${handleConflictWithInsert ? "INSERT":"NOTHING"}
+      ON CONFLICT DO ${handleConflictWithInsert ? "INSERT" : "NOTHING"}
       `;
 
     const result = await _query(query, [...values, id]);
@@ -485,4 +487,3 @@ class BaseModel {
     return this._mapToCamelCase(result.rows[0]);
   }
 }
-export default BaseModel;

@@ -1,12 +1,9 @@
 "use strict";
 /** Convenience middleware to handle common auth cases in routes. */
 
-import { verify } from "jsonwebtoken";
-import { SECRET_KEY } from "../config/config";
-import { UnauthorizedError } from "../expressError";
-import User from "../models/user";
-import parseTimeString from "../helpers/parseTimeString";
-import supabase from "../lib/supabase";
+import { UnauthorizedError } from "../expressError.js";
+import parseTimeString from "../helpers/parseTimeString.js";
+import supabase from "../lib/supabase.js";
 
 /** Middleware: Authenticate user.
  *
@@ -97,7 +94,7 @@ const ensureLoggedIn = async (req, res, next) => {
   }
 };
 
-export default {
+export {
   authenticateToken,
   refreshToken,
   ensureLoggedIn,

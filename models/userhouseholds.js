@@ -1,4 +1,4 @@
-import BaseModel from "./basemodel";
+import BaseModel from "./basemodel.js";
 
 /* The `UserHouseholds` class manages user households by providing methods to add users, remove users,
 and retrieve households for a specific user. */

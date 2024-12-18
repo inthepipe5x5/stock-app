@@ -3,7 +3,6 @@
 /** Shared config for application; can be required many places. */
 
 import dotenv from "dotenv";
-import "colors";
 // import getTableNames from "../helpers/dbTables";
 
 dotenv.config();
@@ -75,7 +74,8 @@ console.log("BCRYPT_WORK_FACTOR".yellow, BCRYPT_WORK_FACTOR);
 console.log(
   "Database:".yellow,
   `${DB_NAME}`.blue,
-  `=> URI: `.grey,`${getDatabaseUri(dbConfigObj(NODE_ENV))}`.blue
+  `=> URI: `.grey,
+  `${getDatabaseUri(dbConfigObj(NODE_ENV))}`.blue
 );
 console.log("---");
 //log created tables

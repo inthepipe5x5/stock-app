@@ -1,4 +1,4 @@
-import BadRequestError from "../expressError";
+import { BadRequestError } from "../expressError.js";
 
 /**
  * Helper for making selective update queries.

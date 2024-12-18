@@ -2,12 +2,11 @@
 
 /** Routes for authentication. */
 import express from "express";
-import supabase from "../lib/supabase";
-import parseTimeString from "../helpers/parseTimeString";
-import { UnauthorizedError } from "../expressError";
-import ProductInventories from "../models/productInventories";
-import UserHouseholds from "../models/userhouseholds";
-import Household from "../models/households";
+import supabase from "../lib/supabase.js";
+import parseTimeString from "../helpers/parseTimeString.js";
+import { UnauthorizedError } from "../expressError.js";
+import ProductInventories from "../models/productInventories.js";
+import UserHouseholds from "../models/userhouseholds.js";
 const authRoutes = express.Router();
 
 /** POST /refresh: Refresh access token using refresh token.

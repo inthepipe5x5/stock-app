@@ -5,7 +5,7 @@
 import jsonschema from "jsonschema";
 
 import { Router } from "express";
-import { BadRequestError } from "../expressError";
+import { BadRequestError } from "../expressError.js";
 import productsNewSchema from "../schemas/productsNew.json";
 import productsUpdateSchema from "../schemas/productsUpdate.json";
 import productsSearchSchema from "../schemas/productsSearch.json";

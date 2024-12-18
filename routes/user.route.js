@@ -5,7 +5,7 @@
 import jsonschema from "jsonschema";
 
 import { Router } from "express";
-import { BadRequestError, NotFoundError } from "../expressError";
+import { BadRequestError, NotFoundError } from "../expressError.js";
 import User from "../models/user"
 import usersNewSchema from "../schemas/usersNew.json";
 import usersUpdateSchema from "../schemas/usersUpdate.json";

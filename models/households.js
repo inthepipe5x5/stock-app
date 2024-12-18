@@ -1,4 +1,4 @@
-import BaseModel from "./basemodel";
+import BaseModel from "./basemodel.js";
 
 /* The `Household` class extends `BaseModel` and defines static properties for tablename and
 defaultMapping. 

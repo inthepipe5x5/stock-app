@@ -3,7 +3,7 @@ Inspired by: https://github.com/japananh/node-express-postgres-boilerplate/blob/
 
 */
 import { roles } from "./rbac";
-import { UnauthorizedError } from "../expressError";
+import { UnauthorizedError } from "../expressError.js";
 
 const rolesAccess = (action, resource) => {
   return async (req, _res, next) => {

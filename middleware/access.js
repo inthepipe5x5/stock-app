@@ -1,4 +1,4 @@
-import { ForbiddenError } from "../expressError";
+import { ForbiddenError } from "../expressError.js";
 
 // Middleware to check RBAC permissions
 

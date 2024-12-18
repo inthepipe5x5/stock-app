@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import { UnauthorizedError } from "../expressError";
+import { UnauthorizedError } from "../expressError.js";
 import User from "../models/user";
 import parseTimeString from "./parseTimeString";
 import { SECRET_KEY } from "../config/config";

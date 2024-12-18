@@ -7,7 +7,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { NotFoundError } from "./expressError.js";
 
-import { authenticateAccessToken, refreshAccessToken } from "./middleware/auth.js";
+import { authenticateToken, refreshToken } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.routes.js";
 // import usersRoutes from "./routes/users";
 
@@ -20,8 +20,8 @@ app.use(json());
 app.use(morgan("tiny"));
 app.use(cookieParser()); //use cookie parser to handle http only cookies
 //supabase auth middleware
-app.use(authenticateAccessToken);
-app.use(refreshAccessToken);
+app.use(authenticateToken);
+app.use(refreshToken);
 
 app.use("/auth", authRoutes);
 // app.use("/companies", companiesRoutes);

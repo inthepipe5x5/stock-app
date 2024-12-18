@@ -1,7 +1,8 @@
 "use strict";
 /** Database setup for stockapp. */
-import { Client } from "pg";
-import { getDatabaseUri, dbConfigObj } from "./config/config";
+import { getDatabaseUri, dbConfigObj } from "./config/config.js";
+import pkg from 'pg';
+const { Client } = pkg;
 
 let db;
 let ENV = process.env.NODE_ENV;

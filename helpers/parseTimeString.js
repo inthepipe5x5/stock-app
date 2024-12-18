@@ -14,8 +14,7 @@
   * @example getExpirationTime('7d')  // 7 days from now in Unix timestamp
   * @example getExpirationTime('30s') // 30 seconds from now in Unix timestamp
  */
-
-export default parseTimeString = (timeStr) => {
+const parseTimeString = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string" || timeStr === null)
     throw new TypeError("Invalid time string format");
   else {
@@ -53,3 +52,5 @@ export default parseTimeString = (timeStr) => {
     return num * multipliers[unit];
   }
 };
+
+export default parseTimeString

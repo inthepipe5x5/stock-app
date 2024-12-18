@@ -1,4 +1,4 @@
-import BaseModel from "./basemodel";
+import BaseModel from "./basemodel.js";
 
 /* The UserInventories class manages user access to inventories by providing methods to add, remove,
 and retrieve inventory information for a user. */
