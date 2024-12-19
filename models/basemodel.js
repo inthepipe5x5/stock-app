@@ -39,7 +39,7 @@ export default class BaseModel {
       return; //do nothing if not a subclass or falsy tableName
     }
 
-    // Check for duplicates //TODO: replace this this.duplicateCheck() later
+    // Check for duplicates
     const primaryKeyMapping = Object.fromEntries(
       this.primaryKeyColumn.map((key, idx) => [
         key,
