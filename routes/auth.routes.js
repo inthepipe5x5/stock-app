@@ -9,41 +9,42 @@ import ProductInventories from "../models/productInventories.js";
 import UserHouseholds from "../models/userhouseholds.js";
 const authRoutes = express.Router();
 
-/** POST /refresh: Refresh access token using refresh token.
- *
- * Returns: { accessToken, user }
- */
-authRoutes.post("/refresh", async (req, res, next) => {
-  const { refreshToken } = req.cookies;
+//TODO: turn this into a route that re-authenticates a user from a magic link
+// /** POST /refresh: Refresh access token using refresh token.
+//  *
+//  * Returns: { accessToken, user }
+//  */
+// authRoutes.post("/refresh", async (req, res, next) => {
+//   const { refreshToken } = req.cookies;
 
-  if (!refreshToken) {
-    return res.status(401).json({ message: "Refresh token not provided" });
-  }
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: "Refresh token not provided" });
+//   }
 
-  try {
-    const { data, error } = await supabase.auth.admin.refreshSession(
-      refreshToken
-    );
+//   try {
+//     const { data, error } = await supabase.auth.admin.refreshSession(
+//       refreshToken
+//     );
 
-    if (error) {
-      return next(new UnauthorizedError("Invalid refresh token"));
-    }
+//     if (error) {
+//       return next(new UnauthorizedError("Invalid refresh token"));
+//     }
 
-    const { access_token, refresh_token, user } = data;
+//     const { access_token, refresh_token, user } = data;
 
-    res.cookie("refresh_token", refresh_token, {
-      httpOnly: true, // Prevents access via JavaScript
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      sameSite: "strict", // Prevents CSRF
-      maxAge: parseInt(process.env.REFRESH_TOKEN_DURATION, 10), // 14 days in milliseconds
-    });
+//     res.cookie("refresh_token", refresh_token, {
+//       httpOnly: true, // Prevents access via JavaScript
+//       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+//       sameSite: "strict", // Prevents CSRF
+//       maxAge: parseInt(process.env.REFRESH_TOKEN_DURATION, 10), // 14 days in milliseconds
+//     });
 
-    res.json({ accessToken: access_token, user });
-  } catch (err) {
-    res.status(403).json({ message: "Invalid refresh token" });
-    console.error(err);
-  }
-});
+//     res.json({ accessToken: access_token, user });
+//   } catch (err) {
+//     res.status(403).json({ message: "Invalid refresh token" });
+//     console.error(err);
+//   }
+// });
 
 /** POST /newuser: Set up a new user with a default household and inventory if none exists.
  *

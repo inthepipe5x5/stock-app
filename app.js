@@ -21,7 +21,7 @@ app.use(morgan("tiny"));
 app.use(cookieParser()); //use cookie parser to handle http only cookies
 //supabase auth middleware
 app.use(authenticateToken);
-app.use(refreshToken);
+// app.use(refreshToken);
 
 app.use("/auth", authRoutes);
 // app.use("/companies", companiesRoutes);

@@ -11,7 +11,7 @@ import supabase from "../lib/supabase.js";
  * on res.locals.user. If invalid, attempt refresh using refresh token.
  */
 
-const authenticateToken = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => { //TODO: only need a test here
   try {
     const authHeader = req.headers.authorization;
     if (authHeader) {
@@ -31,33 +31,6 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-const refreshToken = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.cookies;
-
-    if (refreshToken) {
-      const { data, error } = await supabase.auth.admin.refreshSession(refreshToken);
-
-      if (error) {
-        return next(new UnauthorizedError("Refresh token invalid or expired"));
-      }
-
-      res.locals.user = data.user;
-      res.cookie("refresh_token", data.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: parseInt(process.env.REFRESH_TOKEN_DURATION, 10),
-      });
-
-      return res.json({ accessToken: data.access_token });
-    }
-
-    return next(); // No refresh token provided
-  } catch (err) {
-    return next(err);
-  }
-};
 
 
 /** Middleware to ensure user is logged in.
