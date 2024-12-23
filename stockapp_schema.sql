@@ -143,7 +143,7 @@ CREATE TABLE
         min_quantity INTEGER,
         max_quantity INTEGER,
         current_quantity DECIMAL(10, 2) NOT NULL,
-        unit_quantity unit_measurements DEFAULT 'pcs',
+        quantity_unit unit_measurements DEFAULT 'pcs',
         current_quantity_status current_quantity_status DEFAULT 'unknown',
         barcode VARCHAR(255),
         qr_code VARCHAR(255),
