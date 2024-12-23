@@ -1,0 +1,45 @@
+{
+    "best_buy_subsidiaries": [
+      "Best Buy",
+      "Geek Squad",
+      "Magnolia Audio Video",
+      "Pacific Sales",
+      "Best Buy Mobile",
+      "Insignia",
+      "Five Star"
+    ],
+    "best_buy_canada_partnership": [
+      "Best Buy Canada",
+      "The Source",
+      "Best Buy Express"
+    ],
+    "bell_canada_subsidiaries": [
+      "Bell Canada",
+      "The Source",
+      "Virgin Plus",
+      "Lucky Mobile"
+    ],
+    "canadian_electronics_retailers": [
+      "Best Buy Canada",
+      "The Source",
+      "Best Buy Express"
+    ],
+    "high_end_appliance_retailers": [
+      "Pacific Sales Kitchen and Bath Centers",
+      "Magnolia Hi-Fi"
+    ],
+    "mobile_carriers_sold_by_best_buy_us": [
+      "Verizon Wireless",
+      "AT&T Mobility",
+      "T-Mobile",
+      "Boost Mobile",
+      "Ting Mobile"
+    ],
+    "mobile_carriers_sold_by_best_buy_canada": [
+      "Bell Mobility",
+      "Rogers Wireless",
+      "Telus Mobility",
+      "SaskTel"
+    ]
+  }
+  

@@ -1,0 +1,69 @@
+
+[
+    {
+        "rooms": [
+            {
+                "name": "Kitchen",
+                "description": "Room for cooking and food preparation",
+                "category": "food",
+                "draft_status": "template"
+            },
+            {
+                "name": "Garage",
+                "description": "Room for storing vehicles and tools",
+                "category": "tools",
+                "draft_status": "template"
+            },
+            {
+                "name": "Bathroom",
+                "description": "Room for personal hygiene and skin care",
+                "category": "hygiene & skin care",
+                "draft_status": "template"
+            },
+            {
+                "name": "Living Room",
+                "description": "Room for general family activities",
+                "category": "cleaning supplies",
+                "draft_status": "template"
+            },
+            {
+                "name": "Bedroom",
+                "description": "Room for sleeping and personal belongings",
+                "category": "personal care",
+                "draft_status": "template"
+            }
+        ],
+        "types": [
+            {
+                "name": "Groceries",
+                "description": "Food and household items",
+                "category": "food",
+                "draft_status": "template"
+            },
+            {
+                "name": "Tools",
+                "description": "Equipment for construction and repair",
+                "category": "tools",
+                "draft_status": "template"
+            },
+            {
+                "name": "Skin Care",
+                "description": "Products for skin health and beauty",
+                "category": "hygiene & skin care",
+                "draft_status": "template"
+            },
+            {
+                "name": "Cleaning Supplies",
+                "description": "Products for cleaning and sanitation",
+                "category": "cleaning supplies",
+                "draft_status": "template"
+            },
+            {
+                "name": "Personal Care",
+                "description": "Products for personal hygiene and grooming",
+                "category": "personal care",
+                "draft_status": "template"
+            }
+        ]
+    }
+]

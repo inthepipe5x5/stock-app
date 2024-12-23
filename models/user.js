@@ -19,7 +19,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /** Related functions for users. */
 class User extends BaseModel {
-  static tableName = "Users";
+  static tableName = "UserProfiles";
   static defaultMapping = [
     "name",
     "email",

@@ -1,0 +1,152 @@
+[
+  {
+    "name": "Canadian Tire",
+    "description": "A retail company selling automotive, hardware, sports, leisure, and home products",
+    "product_types": ["automotive", "hardware", "sports equipment", "home goods"],
+    "vendor_type": ["big box", "department store"]
+  },
+  {
+    "name": "Shoppers Drug Mart",
+    "description": "A major pharmacy and convenience store chain",
+    "product_types": ["pharmaceuticals", "cosmetics", "groceries", "health products"],
+    "vendor_type": ["pharmacy", "convenience store"]
+  },
+  {
+    "name": "Loblaws",
+    "description": "One of Canada's largest food retailers",
+    "product_types": ["groceries", "bakery", "deli", "household items"],
+    "vendor_type": ["supermarket", "grocery store"]
+  },
+  {
+    "name": "Metro",
+    "description": "A major Canadian food retailer operating in Ontario and Quebec",
+    "product_types": ["groceries", "produce", "meat", "bakery"],
+    "vendor_type": ["supermarket", "grocery store"]
+  },
+  {
+    "name": "Sephora",
+    "description": "A multinational chain of personal care and beauty stores",
+    "product_types": ["cosmetics", "skincare", "fragrance", "beauty tools"],
+    "vendor_type": ["specialty retailer", "beauty store"]
+  },
+  {
+    "name": "Best Buy",
+    "description": "A multinational consumer electronics retailer",
+    "product_types": ["electronics", "appliances", "computers", "mobile phones"],
+    "vendor_type": ["big box", "electronics store"]
+  },
+  {
+    "name": "Hudson's Bay",
+    "description": "A chain of department stores across Canada",
+    "product_types": ["clothing", "accessories", "home goods", "beauty products"],
+    "vendor_type": ["department store"]
+  },
+  {
+    "name": "Costco",
+    "description": "A membership-based wholesale retailer",
+    "product_types": ["groceries", "electronics", "home goods", "clothing"],
+    "vendor_type": ["wholesale", "big box"]
+  },
+  {
+    "name": "Walmart Canada",
+    "description": "A subsidiary of Walmart operating discount department stores",
+    "product_types": ["groceries", "clothing", "electronics", "home goods"],
+    "vendor_type": ["discount store", "superstore"]
+  },
+  {
+    "name": "Home Depot",
+    "description": "A home improvement retailer selling construction and home improvement products",
+    "product_types": ["hardware", "tools", "appliances", "building materials"],
+    "vendor_type": ["big box", "home improvement store"]
+  },
+  {
+    "name": "Dollarama",
+    "description": "A chain of dollar stores offering a wide range of products",
+    "product_types": ["household items", "food", "toys", "seasonal goods"],
+    "vendor_type": ["discount store", "dollar store"]
+  },
+  {
+    "name": "Staples",
+    "description": "An office supply chain store",
+    "product_types": ["office supplies", "electronics", "furniture", "printing services"],
+    "vendor_type": ["office supply store", "electronics store"]
+  },
+  {
+    "name": "Sobeys",
+    "description": "A national grocery store chain",
+    "product_types": ["groceries", "produce", "meat", "bakery"],
+    "vendor_type": ["supermarket", "grocery store"]
+  },
+  {
+    "name": "London Drugs",
+    "description": "A retail chain offering pharmaceuticals, electronics, and general merchandise",
+    "product_types": ["pharmaceuticals", "electronics", "cosmetics", "household items"],
+    "vendor_type": ["pharmacy", "department store"]
+  },
+  {
+    "name": "Mark's",
+    "description": "A Canadian retailer specializing in casual and work wear",
+    "product_types": ["clothing", "footwear", "workwear", "accessories"],
+    "vendor_type": ["clothing store", "retailer", "workwear retailer"]
+  },
+  {
+    "name": "Sport Chek",
+    "description": "A sporting goods and apparel retailer",
+    "product_types": ["sports equipment", "athletic apparel", "footwear", "outdoor gear"],
+    "vendor_type": ["sporting goods store"]
+  },
+  {
+    "name": "Rona",
+    "description": "A Canadian retailer of hardware, home improvement, and gardening products",
+    "product_types": ["hardware", "building materials", "gardening supplies", "home decor"],
+    "vendor_type": ["home improvement store", "hardware store"]
+  },
+  {
+    "name": "Winners",
+    "description": "An off-price department store chain",
+    "product_types": ["clothing", "home goods", "accessories", "beauty products"],
+    "vendor_type": ["discount store", "department store"]
+  },
+  {
+    "name": "HomeSense",
+    "description": "A home furnishings retailer offering discounted brand-name products",
+    "product_types": ["home decor", "furniture", "kitchenware", "bedding"],
+    "vendor_type": ["home goods store", "discount store"]
+  },
+  {
+    "name": "Indigo",
+    "description": "A book and lifestyle retailer",
+    "product_types": ["books", "stationery", "gifts", "home decor"],
+    "vendor_type": ["bookstore", "gift shop", "retailer"]
+  },
+  {
+    "name": "Jean Coutu",
+    "description": "A Canadian pharmacy chain",
+    "product_types": ["pharmaceuticals", "cosmetics", "health products", "photo services"],
+    "vendor_type": ["pharmacy", "drugstore"]
+  },
+  {
+    "name": "Canadian Tire Gas+",
+    "description": "A chain of gas stations and convenience stores",
+    "product_types": ["fuel", "convenience items", "car wash", "propane"],
+    "vendor_type": ["gas station", "convenience store"]
+  },
+  {
+    "name": "Lululemon",
+    "description": "An athletic apparel retailer",
+    "product_types": ["athletic wear", "yoga apparel", "accessories", "lifestyle clothing"],
+    "vendor_type": ["specialty retailer", "clothing store", "retailer"]
+  },
+  {
+    "name": "Roots",
+    "description": "A Canadian lifestyle brand offering clothing and leather goods",
+    "product_types": ["clothing", "leather goods", "footwear", "accessories"],
+    "vendor_type": ["clothing store", "retailer", "lifestyle brand"]
+  },
+  {
+    "name": "Aritzia",
+    "description": "A women's fashion boutique chain",
+    "product_types": ["women's clothing", "accessories", "shoes", "beauty products"],
+    "vendor_type": ["clothing store", "retailer", "fashion boutique"]
+  }
+]
