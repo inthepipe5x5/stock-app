@@ -3,6 +3,7 @@
 
 import { UnauthorizedError } from "../expressError.js";
 import parseTimeString from "../helpers/parseTimeString.js";
+import { validateSupabaseToken } from "../helpers/tokens.js";
 import supabase from "../lib/supabase.js";
 
 /** Middleware: Authenticate user.
@@ -11,27 +12,40 @@ import supabase from "../lib/supabase.js";
  * on res.locals.user. If invalid, attempt refresh using refresh token.
  */
 
-const authenticateToken = async (req, res, next) => { //TODO: only need a test here
+const authenticateToken = async (req, res, next) => {
+  //TODO: only need a test here
   try {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.replace(/^[Bb]earer /, "").trim();
-      const { data: user, error } = await supabase.auth.getUser(token);
+    const token =
+      req.headers.authorization.replace(/^[Bb]earer /, "").trim() ||
+      req.cookies.token ||
+      req.body.token;
 
-      if (error || !user) {
+    if (token) {
+      const user = validateSupabaseToken(token);
+      console.log("data access token received", data);
+      //handle errors & no data found from token
+      if (user === null || !user) {
         return next(new UnauthorizedError("Invalid or expired access token"));
       }
-
-      res.locals.user = user; // Attach user to the request
+      //extract user id from auth.users
+      const { id: user_id } = user;
+      //attach token to request
+      const reqContext = {
+        user: user_id,
+        auth: user,
+        token,
+      };
+      console.info("reqContext:", reqContext);
+      req.context = reqContext;
       return next();
     }
-    return next(); // No access token provided
+    // No access token provided
+    throw new UnauthorizedError("No access token provided");
+    //return next();
   } catch (err) {
     return next(err);
   }
 };
-
-
 
 /** Middleware to ensure user is logged in.
  *
@@ -67,8 +81,4 @@ const ensureLoggedIn = async (req, res, next) => {
   }
 };
 
-export {
-  authenticateToken,
-  refreshToken,
-  ensureLoggedIn,
-};
+export { authenticateToken, refreshToken, ensureLoggedIn };

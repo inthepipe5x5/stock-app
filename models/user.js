@@ -19,7 +19,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /** Related functions for users. */
 class User extends BaseModel {
-  static tableName = "UserProfiles";
+  static tableName = "profiles";
   static defaultMapping = [
     "name",
     "email",
@@ -42,7 +42,12 @@ class User extends BaseModel {
     const { email, oauthProvider, oauthProviderId, idToken } = authData;
 
     // Validate required fields
-    const requiredKeys = ["email", "oauthProvider", "oauthProviderId", "idToken"];
+    const requiredKeys = [
+      "email",
+      "oauthProvider",
+      "oauthProviderId",
+      "idToken",
+    ];
     if (!requiredKeys.every((key) => key in authData)) {
       throw new BadRequestError("Invalid authentication attempt");
     }
@@ -99,7 +104,7 @@ class User extends BaseModel {
       return false;
     }
   }
-  
+
   /*Apple Token Validation Function:
 
     Fetch Apple’s public keys from their API.
@@ -107,7 +112,7 @@ class User extends BaseModel {
     Match the token’s sub with the oauthProviderId.
    @returns {true, false} depending on validity of token 
 
-  */ 
+  */
   static async validateAppleToken(idToken, expectedOauthProviderId) {
     try {
       // Fetch Apple's public keys
@@ -136,7 +141,6 @@ class User extends BaseModel {
       return false;
     }
   }
-
 
   /** Register user with data.
    *
@@ -229,7 +233,7 @@ class User extends BaseModel {
       [id]
     );
 
-    user.households = userHouseholdsRes.rows;
+    user.households = userHouseholdsRes.rows.map((uh) => ({ ...uh }));
     return user;
   }
 
@@ -312,6 +316,78 @@ class User extends BaseModel {
       throw new NotFoundError(
         `No household ${householdId} found for user ${userId}`
       );
+    }
+  }
+
+  /**
+   * Retrieves profiles, households, and inventories for a given user.
+   *
+   * This function fetches the profiles, households, and inventories associated with a specific user.
+   * It returns the data in a structured format, including profile details and JSON-aggregated inventories.
+   *
+   * @param {number} userId - The ID of the user whose profiles, households, and inventories are to be retrieved.
+   * @returns {Promise<Array<Object>|null>} A promise that resolves to an array of objects containing profile, household, and inventory data, or null if no data is found.
+   * @throws {Error} Throws an error if unable to fetch user access.
+   */
+  static async getProfilesHouseholdsInventories(user_id) {
+    try {
+      const queryStatement = `
+      WITH user_households_cte AS (
+        SELECT *
+        FROM user_households
+        WHERE user_id = $1
+      )
+      SELECT
+        p.user_id AS profile_user_id,
+        p.name AS profile_name,
+        p.email AS profile_email,
+        p.preferences AS profile_preferences,
+        p.created_at AS profile_created_at,
+        uh.household_id AS household_id,
+        json_agg(
+          json_build_object(
+            'inventory_id', i.id,
+            'inventory_name', i.name,
+            'inventory_description', i.description,
+            'inventory_category', i.category,
+            'inventory_draft_status', i.draft_status,
+            'inventory_is_template', i.is_template,
+            'inventory_styling', i.styling
+          )
+        ) AS inventories
+      FROM
+        profiles p
+      JOIN
+        user_households_cte uh ON uh.user_id = p.user_id
+      JOIN
+        inventories i ON i.household_id = uh.household_id
+      WHERE
+        i.is_template = false
+      GROUP BY
+        p.user_id, uh.household_id;
+    `;
+
+      const { rows } = await db.query(queryStatement, [user_id]);
+
+      if (rows.length === 0) {
+        return null; // Return null if no access is found
+      }
+
+      // Map the query result into the required structure
+      return rows.map((row) => ({
+        profile: {
+          user_id: row.profile_user_id,
+          name: row.profile_name,
+          email: row.profile_email,
+          preferences: row.profile_preferences,
+          created_at: row.profile_created_at,
+        },
+        households: row.household_id,
+        inventories: row.inventories, // JSON-aggregated inventories
+      }));
+    } catch (err) {
+      console.error("Error fetching user access:", err);
+      throw new Error("Unable to fetch user access");
     }
   }
 }

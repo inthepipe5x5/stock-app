@@ -18,7 +18,7 @@ const householdRoutes = Router({ mergeParams: true });
 householdRoutes.get('/', async (req, res, next) => {
     try {
         const {filters} = req.body
-        const households = await Household.findAll(filters)
+        const households = await Household.findAll(filters) //eslint-disable-line
         if (!households || households === null) throw new NotFoundError("No households found.")
         else {
             res.send({households}).status(200)

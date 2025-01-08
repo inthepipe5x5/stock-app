@@ -7,7 +7,7 @@ export default class UserHouseholds extends BaseModel {
   static defaultMapping = {
     userId: "user_id",
     householdId: "household_id",
-    role: "role",
+    access_level: "access_level",
   };
 
   static async addUserToHousehold(userId, householdId, role = "guest") {
@@ -26,6 +26,6 @@ export default class UserHouseholds extends BaseModel {
   }
 
   static async getHouseholdsForUser(userId) {
-    return this.findRelated({ userId }, ["household_id", "role"]);
+    return this.findRelated({ userId }, ["household_id", "access_level"]);
   }
 }

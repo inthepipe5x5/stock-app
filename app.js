@@ -7,7 +7,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { NotFoundError } from "./expressError.js";
 
-import { authenticateToken, refreshToken } from "./middleware/auth.js";
+import { authenticateToken } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.routes.js";
 // import usersRoutes from "./routes/users";
 
