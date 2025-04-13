@@ -5,10 +5,22 @@ import { BadRequestError, NotFoundError } from "../expressError.js";
 import {
   convertCamelToSnake,
   convertSnakeToCamel,
+  convertObjKeys
 } from "../helpers/caseConverter.js";
 import sqlForConditionFilters from "../helpers/sql.js";
+import getTableNames from "../helpers/dbTables.js";
 
 const { query: _query } = db;
+
+// get the table names from the database
+export const publicSchemaTables = getTableNames()
+  .then(data => {
+    if (!!!data) throw new Error("No data returned from getTableNames");
+    data
+  })
+  .catch(error => {
+    console.error("Error retrieving table names:", error);
+  });
 
 /* The above class `BaseModel` provides methods for interacting with a database table, including
 creating, finding, updating, and deleting records, as well as handling duplicates and complex
@@ -17,14 +29,36 @@ export default class BaseModel {
   /** Define the table name and column mappings in the subclass */
   static dbSchema = "public"; //default schema that tables will be stored under
   static tableName = null;
-  static defaultMapping = {};
+  static defaultMapping = publicSchemaTables ?? {};
   static columnMappings = (async () => {
     return await this.createColumnMapping();
   })();
 
-  static primaryKeyColumn = (async () => {
-    return await this.getPrimaryKeyColumns();
-  })();
+  constructor(
+    tableName,
+    tables = publicSchemaTables,
+    schema = 'public',
+    defaultMapping = {}) {
+    this.schema = schema;
+    this.tableName = convertSnakeToCamel(tableName);
+    this.tables = !!tables && typeof tables === 'object' ? this.convertObjKeys(tables) : {};
+    this.defaultMapping = defaultMapping;
+    this.columnMappings = this.createColumnMapping(defaultMapping);
+    this.pk = this.primaryKeyColumn(this.tableName);
+  }
+
+
+
+  primaryKeyColumn(tableName = undefined) {
+    // Get the primary key columns for this table
+    const tableName = convertSnakeToCamel(tableName ?? this?.tableName) ?? null;
+    if (!!!tableName || !!!this.tables[tableName]) {
+      throw new Error("Table name not defined.");
+    }
+    return this.tables[tableName].primary_key
+      ?? this.tables[tableName].primaryKey
+      ?? this.tables[tableName].primaryKeyColumn ?? null;
+  }
 
   /** Create a new record.
    *
@@ -36,7 +70,7 @@ export default class BaseModel {
    */
   static async create(data, handleConflictWithUpdate = false) {
     if (!this.tableName) {
-      return; //do nothing if not a subclass or falsy tableName
+      throw new Error('Need a new name'); //do nothing if not a subclass or falsy tableName
     }
 
     // Check for duplicates
@@ -44,7 +78,7 @@ export default class BaseModel {
       this.primaryKeyColumn.map((key, idx) => [
         key,
         Object.keys(data).filter((key) => this.primaryKeyColumn.includes(key))[
-          idx
+        idx
         ],
       ])
     );
@@ -81,9 +115,8 @@ export default class BaseModel {
       throw new Error("Table name not defined in subclass.");
     }
 
-    let query = `SELECT ${Object.values(this.columnMappings)} FROM ${
-      this.tableName
-    }`;
+    let query = `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName
+      }`;
     let whereClauses = [];
     let values = [];
 
@@ -114,8 +147,7 @@ export default class BaseModel {
     }
 
     const result = await _query(
-      `SELECT ${Object.values(this.columnMappings)} FROM ${
-        this.tableName
+      `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName
       } WHERE id = $1`,
       [id]
     );
@@ -287,27 +319,30 @@ export default class BaseModel {
    */
   static async getColumnNames(tableName) {
     try {
-      const result = await BaseModel.pool.query(
-        `SELECT a.attname AS column_name
-       FROM pg_catalog.pg_attribute a
-       JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-       JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
-       WHERE c.relname = $1 AND n.nspname = $2 AND a.attnum > 0
-       ORDER BY a.attnum`,
-        [tableName, this.dbSchema]
-      );
-      const columnNames = result.rows.map((row) => row.column_name);
-      return columnNames;
+      // const result = await BaseModel.pool.query(
+      //   `SELECT a.attname AS column_name
+      //  FROM pg_catalog.pg_attribute a
+      //  JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+      //  JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+      //  WHERE c.relname = $1 AND n.nspname = $2 AND a.attnum > 0
+      //  ORDER BY a.attnum`,
+      //   [tableName, this.dbSchema]
+      // );
+      // const columnNames = result.rows.map((row) => row.column_name);
+      // return columnNames;
     } catch (err) {
       console.error(err);
     }
   }
 
-  static async createColumnMapping(defaultMapping = {}) {
+  static createColumnMapping(defaultMapping = {}) {
     //guard clause if called on parent
     if ((this.tableName === null) | !this.tableName) return;
     else {
-      const column_names = await BaseModel.getColumnNames(this.tableName);
+      const column_names = BaseModel.defaultMapping?.[this?.tableName] ?? BaseModel.defaultMapping?.[convertSnakeToCamel(this?.tableName)] ?? BaseModel.defaultMapping?.[convertSnakeToCamel(this?.tableName)] ?? BaseModel?.defaultMapping?.[convertCamelToSnake(this?.tableName)] ?? null//await BaseModel.getColumnNames(this.tableName);
+      if (!!!column_names) {
+        throw new Error(`There are no column names for this table: ${this.tableName}`);
+      }
       //db is set up with tables
       if (column_names) {
         const mappingOutput = {};
@@ -447,9 +482,8 @@ export default class BaseModel {
       " AND "
     );
 
-    const query = `SELECT ${Object.values(this.columnMappings)} FROM ${
-      this.tableName
-    } WHERE ${whereClause}`;
+    const query = `SELECT ${Object.values(this.columnMappings)} FROM ${this.tableName
+      } WHERE ${whereClause}`;
     const result = await _query(query, values);
 
     if (!result.rows[0]) {
@@ -485,5 +519,18 @@ export default class BaseModel {
     }
 
     return this._mapToCamelCase(result.rows[0]);
+  }
+  static async findByIdArray(idColName = "id", idArray) {
+    try {
+      const result = await db.query(
+        `SELECT ${Object.values(this.columnMappings) ?? "*"}
+       FROM ${this.tableName}
+       WHERE ${idColName ?? this.primaryKeyColumn()} = ANY($1)`,
+        [idArray]
+      );
+      return result.rows.map(this._mapToCamelCase);
+    } catch (err) {
+      console.error(err);
+    }
   }
 }

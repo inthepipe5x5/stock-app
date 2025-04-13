@@ -27,7 +27,7 @@ const attachTokenAccess = async (req, res, next) => {
     const { user: userId } =
       req.context?.auth ?? req.cookies ?? req.params ?? req.body ?? req.query;
 
-    if (!userId) {
+    if (!!!userId) {
       throw new UnauthorizedError("Unauthorized");
     }
 
@@ -35,12 +35,64 @@ const attachTokenAccess = async (req, res, next) => {
     if (!userProfile) {
       throw new BadRequestError("User not found");
     }
-
-    req.context.user = userProfile;
+    const { households, roles } = userProfile ?? null;
+    if (households.length > 0) {
+      const inventories = await ProductInventories.getInventorysForUser(userId);
+    }
+    req.context = {
+      user: { ...req.context.user, ...userProfile },
+      roles,
+      households,
+    };
     next();
   } catch (err) {
     return next(err);
   }
+};
+
+const checkIfOwner = (req, res, next) => {
+  try {
+    if (!req.context || !req.context.user || !req.context.auth.id) {
+      throw new UnauthorizedError("Unauthorized");
+    }
+
+    if (req.context.auth.is_super_admin) {
+      return next();
+    }
+
+    const { id: userId } =
+      req.context.user || req.context.auth.id || req.context.user_id;
+    const { id: resourceId } = req.params;
+    const { pathname } = url.parse(req.url);
+    const resource = pathname.split("/")[1];
+    const action = req.method;
+    const userHouseholds = [...req.context.user.households];
+
+    if (
+      userId === resourceId &&
+      ["profile", "user"].includes(resource.toLowerCase())
+    ) {
+      return next();
+    }
+    if (resource.toLowerCase() === "household") {
+    }
+
+    throw new ForbiddenError("Access denied");
+  } catch (err) {
+    return next(err);
+  }
+};
+const checkDraftStatusAccess = (req, res, next) => {
+  if (req.context.auth.is_super_admin) {
+    return next();
+  }
+  const { pathname } = url.parse(req.url);
+  const resource = pathname.split("/")[1];
+  if ("household" in pathname) {
+  }
+
+  const activeHousehold = getActiveHousehold(req);
+  req.context.user.households.find((h) => h.id === req.params.id);
 };
 
 /**

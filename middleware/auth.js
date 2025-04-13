@@ -81,4 +81,4 @@ const ensureLoggedIn = async (req, res, next) => {
   }
 };
 
-export { authenticateToken, refreshToken, ensureLoggedIn };
+export { authenticateToken, ensureLoggedIn };

@@ -15,7 +15,7 @@ import {
 } from "../expressError.js";
 import { BCRYPT_WORK_FACTOR } from "../config/config.js";
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /** Related functions for users. */
 class User extends BaseModel {
@@ -26,10 +26,10 @@ class User extends BaseModel {
     "password",
     "oauth_provider",
     "oauth_provider_id",
-    "refresh_token",
-    "refresh_token_expires_at",
+    // "refresh_token",
+    // "refresh_token_expires_at",
   ].reduce((accum, current) => {
-    accum[convertSnakeToCamel(current)] = current;
+    if (!!current) accum[convertSnakeToCamel(current)] = current;
   }, {});
 
   /** Authenticate user with authData object.
@@ -223,7 +223,7 @@ class User extends BaseModel {
     );
 
     const user = userRes.rows[0];
-    if (!user) throw new NotFoundError(`No user: ${id}`);
+    if (!user) throw new NotFoundError(`User.get(id) => 404 || No user: ${id}`);
 
     const userHouseholdsRes = await db.query(
       `SELECT h.id, h.name, uh.access_level
@@ -232,8 +232,15 @@ class User extends BaseModel {
        WHERE uh.user_id = $1`,
       [id]
     );
-
+    //attach households to user object
     user.households = userHouseholdsRes.rows.map((uh) => ({ ...uh }));
+
+    //return user.roles as an array of objects with households id as key and access_level as value
+    user.roles = userHouseholdsRes.rows.map((uh) => {
+      const { id, access_level } = uh;
+      return { [id]: access_level };
+    });
+    console.log(`User.get(id) => 200, user found: ${user}`);
     return user;
   }
 

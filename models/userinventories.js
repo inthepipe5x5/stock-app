@@ -1,5 +1,7 @@
 import BaseModel from "./basemodel.js";
 
+//THIS TABLE HAS BEEN DELETED
+
 /* The UserInventories class manages user access to inventories by providing methods to add, remove,
 and retrieve inventory information for a user. */
 export default class UserInventories extends BaseModel {
