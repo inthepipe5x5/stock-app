@@ -5,7 +5,6 @@ import express from "express";
 import supabase from "../lib/supabase.js";
 import parseTimeString from "../helpers/parseTimeString.js";
 import { UnauthorizedError } from "../expressError.js";
-import { user } from "pg/lib/defaults.js";
 // import ProductInventories from "../models/productInventories.js";
 // import UserHouseholds from "../models/userhouseholds.js";
 const authRoutes = express.Router();

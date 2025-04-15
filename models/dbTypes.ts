@@ -41,6 +41,7 @@ export type Database = {
           id: string
           initial_template_name: string
           is_template: boolean | null
+          name: string | null
           styling: Json | null
         }
         Insert: {
@@ -49,6 +50,7 @@ export type Database = {
           id: string
           initial_template_name: string
           is_template?: boolean | null
+          name?: string | null
           styling?: Json | null
         }
         Update: {
@@ -57,6 +59,7 @@ export type Database = {
           id?: string
           initial_template_name?: string
           is_template?: boolean | null
+          name?: string | null
           styling?: Json | null
         }
         Relationships: []
@@ -120,6 +123,7 @@ export type Database = {
           last_scanned: string | null
           max_quantity: number | null
           min_quantity: number | null
+          photo_url: string | null
           product_category: string | null
           product_name: string
           qr_code: string | null
@@ -145,6 +149,7 @@ export type Database = {
           last_scanned?: string | null
           max_quantity?: number | null
           min_quantity?: number | null
+          photo_url?: string | null
           product_category?: string | null
           product_name: string
           qr_code?: string | null
@@ -172,6 +177,7 @@ export type Database = {
           last_scanned?: string | null
           max_quantity?: number | null
           min_quantity?: number | null
+          photo_url?: string | null
           product_category?: string | null
           product_name?: string
           qr_code?: string | null
@@ -189,6 +195,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "inventories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "productitems_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "user_households_view"
+            referencedColumns: ["inventory_id"]
           },
           {
             foreignKeyName: "productitems_vendor_id_fkey"
@@ -343,21 +356,21 @@ export type Database = {
           created_at: string
           task_id: string
           updated_at: string
-          user_profile_id: string
+          user_id: string
         }
         Insert: {
           assigned_by?: string | null
           created_at?: string
           task_id: string
           updated_at?: string
-          user_profile_id: string
+          user_id: string
         }
         Update: {
           assigned_by?: string | null
           created_at?: string
           task_id?: string
           updated_at?: string
-          user_profile_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -376,7 +389,7 @@ export type Database = {
           },
           {
             foreignKeyName: "taskassignments_user_profile_id_fkey"
-            columns: ["user_profile_id"]
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
@@ -529,9 +542,62 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_households_view: {
+        Row: {
+          access_level: Database["public"]["Enums"]["role_access"] | null
+          city: string | null
+          country: string | null
+          description: string | null
+          email: string | null
+          household_id: string | null
+          inventory_category: string | null
+          inventory_id: string | null
+          inventory_name: string | null
+          invite_accepted: boolean | null
+          invite_expires_at: string | null
+          invited_at: string | null
+          invited_by: string | null
+          name: string | null
+          state: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_household_id"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_invited_by"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_households_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_households_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
+      check_user_access: {
+        Args: { requested_resource: Json }
+        Returns: boolean
+      }
       get_public_schema_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -542,8 +608,11 @@ export type Database = {
         }[]
       }
       insert_templated_household_and_inventories: {
-        Args: Record<PropertyKey, never> | { new_user_id: string }
-        Returns: undefined
+        Args: { new_user_id: string }
+        Returns: {
+          household_id: string
+          inventory_id: string
+        }[]
       }
       json_matches_schema: {
         Args: { schema: Json; instance: Json }
@@ -560,6 +629,10 @@ export type Database = {
       jsonschema_validation_errors: {
         Args: { schema: Json; instance: Json }
         Returns: string[]
+      }
+      new_user_household_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_overdue_tasks: {
         Args: Record<PropertyKey, never>

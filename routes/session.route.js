@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { BadRequestError, UnauthorizedError } from "../expressError";
-import db from "../db";
+import { BadRequestError, UnauthorizedError } from "../expressError.js";
+import db from "../db.js";
+
 
 const sessionRoutes = Router({ mergeParams: true });
 
@@ -13,6 +14,17 @@ const sessionRoutes = Router({ mergeParams: true });
 
 sessionRoutes.get("/", async function (req, res, next) {
   try {
+
+    const unauthorizedUserConditions = [
+      // !assignedUser,
+      // assignedUser !== (req?.context?.user?.id ?? req?.context?.user?.user_id),
+      !req?.context?.user,
+      // !['confirmed'].includes(req?.context?.user?.["draft_status"] ?? req?.context?.user?.["draftStatus"])
+    ];
+    if (unauthorizedUserConditions.some(condition => Boolean(condition))) {
+      throw new BadRequestError("Unauthorized");
+    }
+
     let userSessionData = {
       profile: req?.context?.profile ?? null,
       households: req?.context?.households ?? null,
@@ -135,7 +147,7 @@ sessionRoutes.get("/", async function (req, res, next) {
 
 
 // Endpoint to get user statistics
-statsRoute.post('/stats', async (req, res) => {
+sessionRoutes.post('/stats', async (req, res) => {
   const { household_id, user_id } = req.body;
 
   try {
@@ -209,3 +221,4 @@ statsRoute.post('/stats', async (req, res) => {
   }
 });
 
+export default sessionRoutes;

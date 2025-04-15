@@ -8,7 +8,8 @@ import cookieParser from "cookie-parser";
 import { NotFoundError } from "./expressError.js";
 
 import { authenticateToken } from "./middleware/auth.js";
-import authRoutes from "./routes/auth.routes.js";
+import authRoutes from "./routes/auth.route.js";
+import sessionRoutes from "./routes/session.route.js";
 // import usersRoutes from "./routes/users";
 
 import morgan from "morgan";
@@ -24,7 +25,7 @@ app.use(authenticateToken);
 // app.use(refreshToken);
 
 app.use("/auth", authRoutes);
-app.use('/stats', )
+app.use('/session', sessionRoutes)
 // app.use("/companies", companiesRoutes);
 // app.use("/users", usersRoutes);
 // app.use("/jobs", jobsRoutes);
