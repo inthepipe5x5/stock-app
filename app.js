@@ -24,6 +24,7 @@ app.use(authenticateToken);
 // app.use(refreshToken);
 
 app.use("/auth", authRoutes);
+app.use('/stats', )
 // app.use("/companies", companiesRoutes);
 // app.use("/users", usersRoutes);
 // app.use("/jobs", jobsRoutes);

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 import { UnauthorizedError } from "../expressError.js";
-import User from "../models/user.js"; // Assuming User is a model that interacts with your database
+// import User from "../models/user.js"; // Assuming User is a model that interacts with your database
 import parseTimeString from "../helpers/parseTimeString.js"; // Assuming this is a utility function to parse time strings
 import { SECRET_KEY } from "../config/config.js"
 import supabase from "../lib/supabase.js";
@@ -45,9 +45,14 @@ const updateAccessToken = async (decodedRefreshToken) => {
     // const decoded = jwt.verify(refreshToken, SECRET_KEY); //this will be done in the /auth.js middleware
 
     // Fetch additional user data from the database
-    const userData = await User.complexFind({
-      oauthProviderId: decodedRefreshToken.oauthProviderId,
-    });
+    // const userData = await User.complexFind({
+    //   oauthProviderId: decodedRefreshToken.oauthProviderId,
+    // });
+    const { data: userData, error: userError } = await supabase.getUser(decodedRefreshToken);
+    if (userError) {
+      console.error("Error fetching user data:", userError);
+      throw new UnauthorizedError("Invalid refresh token");
+    }
 
     if (userData) {
       const newAccessToken = createToken({

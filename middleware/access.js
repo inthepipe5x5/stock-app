@@ -9,14 +9,30 @@ import url from "url";
 // import TaskAssignments from "../models/taskAssignments.js";
 import User from "../models/user.js";
 // Middleware to check RBAC permissions
-
+import db from "../db.js";
 import {
   ForbiddenError,
   UnauthorizedError,
   BadRequestError,
 } from "../expressError.js";
 import url from "url";
-import User from "../models/user.js";
+// import User from "../models/user.js";
+import supabase from "../lib/supabase.js";
+import getTableNames from "../helpers/dbTables.js";
+
+//initialize table mapping
+const tableMapping = {}
+getTableNames()
+  .then((tables) => {
+    tables.forEach((table) => {
+      tableMapping[table] = table;
+    });
+  }).then(() => {
+    console.log("Table mapping initialized:", tableMapping);
+  })
+  .catch((err) => {
+    console.error("Error fetching table names:", err);
+  });
 
 /**
  * Middleware to attach user context to the request object
@@ -82,17 +98,34 @@ const checkIfOwner = (req, res, next) => {
     return next(err);
   }
 };
-const checkDraftStatusAccess = (req, res, next) => {
+
+const checkDraftStatusAccess = async (req, res, next) => {
   if (req.context.auth.is_super_admin) {
     return next();
   }
   const { pathname } = url.parse(req.url);
   const resource = pathname.split("/")[1];
-  if ("household" in pathname) {
+  if (!!!resource || (!!tableMapping && !resource in tableMapping)) {
+    throw new BadRequestError("Resource not found");
   }
+  const requestedHouseholds = req?.context?.households ?? req?.body?.households;
+  const [resourceIdKey, resourceId] = Object.entries(req?.params ?? {}).find(([key, value]) => {
+    return key.startsWith(resource) || key === 'id'
+  })
+  // const activeHousehold = req.context.user.households.find((h) => h.id === req.params.id) ?? req.context.households.find((h) => h.id === req.params.id);
 
-  const activeHousehold = getActiveHousehold(req);
-  req.context.user.households.find((h) => h.id === req.params.id);
+  const requestedDraftStatus = await db.query(
+    `SELECT draft_status FROM ${resource} WHERE $1 = $2`,
+    [resourceIdKey, resourceId]
+  )
+  if (!!requestedDraftStatus) {
+
+    const { data, error } = await supabase.rpc('check_user_access', {
+      user_id: req.context.auth.id,
+      household_id: req.context.household_id,
+      draft_status: requestedDraftStatus ?? 'draft'
+    })
+  }
 };
 
 /**
