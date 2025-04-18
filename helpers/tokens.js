@@ -75,20 +75,20 @@ const updateAccessToken = async (decodedRefreshToken) => {
   }
 };
 
-const validateSupabaseToken = async (token) => {
-  // Step 1: Get the user from Supabase Auth using the access token
-  const { data: userData, error: userError } = await supabase.auth.getUser(
-    token
-  );
+// const validateSupabaseToken = async (token) => {
+//   // Step 1: Get the user from Supabase Auth using the access token
+//   const { data: userData, error: userError } = await supabase.auth.getUser(
+//     token
+//   );
 
-  // Step 2: Check for errors
-  if (userError) {
-    console.error("Error fetching user:", userError);
-    return null; // Token is invalid or expired
-  }
+//   // Step 2: Check for errors
+//   if (userError) {
+//     console.error("Error fetching user:", userError);
+//     return null; // Token is invalid or expired
+//   }
 
-  // Step 3: Return the user ID and other user data
-  return userData.user; // This contains the user ID and other information
-};
+//   // Step 3: Return the user ID and other user data
+//   return userData.user; // This contains the user ID and other information
+// };
 
-export { createToken, updateAccessToken, validateSupabaseToken };
+export { createToken, updateAccessToken };

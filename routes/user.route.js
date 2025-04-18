@@ -4,13 +4,14 @@
 
 // import jsonschema from "jsonschema";
 
-// import { Router } from "express";
-// import { BadRequestError, NotFoundError } from "../expressError.js";
+import { Router } from "express";
+import { BadRequestError, NotFoundError } from "../expressError.js";
+import db from "../db.js";
 // import User from "../models/user";
 // import { userCreateSchema, userUpdateSchema } from "../schemas/userSchema";
 // import supabase from "../lib/supabase";
 
-// const userRoutes = Router({ mergeParams: true });
+const userRoutes = Router({ mergeParams: true });
 
 // /** POST / { user }  => { user, token }
 //  *
@@ -105,4 +106,47 @@
 //   }
 // );
 
-// export default userRoutes;
+userRoutes.get('/search', async (req, res, next) => {
+    try {
+        const {
+            searchTerm, // search term to filter users
+        } = req.query || req.body;
+        const household_id = req?.context?.householdId || req?.context?.user?.["householdId"];
+        if (!searchTerm) {
+            throw new BadRequestError("Search term is required");
+        }
+
+        //string boolean to check if the request is within the user household if false else excludes existing members of user household
+        const { externalOnly } = req?.query || req?.body
+
+        const excludeInternalMembers = typeof externalOnly === "string" ? Boolean(externalOnly) : false;
+
+        const query = `
+        SELECT u.id, u.first_name, u.last_name, u.email
+        FROM profiles u
+        WHERE
+            u.draft_status = 'confirmed'
+            AND (
+                u.first_name ILIKE $1 
+                OR u.last_name ILIKE $1 
+                OR u.email ILIKE $1 
+                OR u.name ILIKE $1
+            )
+        ${excludeInternalMembers ? "AND u.id NOT IN (SELECT user_id FROM households WHERE household_id = $2)" : ""}
+        SORT BY u.first_name, u.last_name
+            LIMIT 10
+            `
+        const data = await db.query(query, [`%${searchTerm}%`, excludeInternalMembers ? household_id : null]);
+        if (!!!data?.rows?.length) {
+            return res.status(200).json({
+                users: [],
+            });
+        }
+
+        return res.json(users);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+export default userRoutes;

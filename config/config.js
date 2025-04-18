@@ -3,20 +3,21 @@
 /** Shared config for application; can be required many places. */
 
 import dotenv from "dotenv";
+import colors from "colors";
 // import getTableNames from "../helpers/dbTables";
 
 dotenv.config();
 
-const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
-const NODE_ENV = process.env.NODE_ENV || "default";
-const PORT = +process.env.PORT || 3001; //app port
-const HOST = +process.env.HOST || "127.0.0.1";
+export const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
+export const NODE_ENV = process.env.NODE_ENV || "default";
+export const PORT = +process.env.PORT || 3001; //app port
+export const HOST = process?.env?.[NODE_ENV === 'production' ? "HOST_PRODUCTION" : "HOST"] || "127.0.0.1";
 //db details
-const DB_NAME = process.env.DB_NAME || "stockapp";
-const TEST_DB_NAME = process.env.DB_NAME || "stockapp_test";
-const DB_PORT = process.env.DB_PORT || 5432;
-const DB_USERNAME = process.env.DATABASE_USERNAME;
-const DB_PW = process.env.DB_PW;
+export const DB_NAME = process.env.DB_NAME || "stockapp";
+export const TEST_DB_NAME = process.env.DB_NAME || "stockapp_test";
+export const DB_PORT = process.env.DB_PORT || 5432;
+export const DB_USERNAME = process.env.DATABASE_USERNAME;
+export const DB_PW = process.env.DB_PW;
 
 /**
  * The function `dbConfigObj` returns a configuration object for a database connection based on the
@@ -53,18 +54,27 @@ const dbConfigObj = (env = NODE_ENV) => {
  * `process.env.TEST_DATABASE_URI` or a constructed URI using the `dbUser`, `dbPw`, `host`, `dbPort`,
  * and `database` parameters. If the `env` parameter is not set
  */
-const getDatabaseUri = ({ host, dbUser, dbPw, database, dbPort, env }) => {
-  return env === "test"
-    ? process.env.TEST_DATABASE_URI ||
-        `postgresql://${dbUser}:${dbPw}@${host}:${dbPort}/${database}`
-    : process.env.DATABASE_URI ||
-        `postgresql://${dbUser}:${dbPw}@${host}:${dbPort}/${database}`;
+const getDatabaseUri = () => {//({ host, dbUser, dbPw, database, dbPort, env }) => {
+  // switch (env) {
+  //   case ('test'):
+  //     return process.env.TEST_DATABASE_URI ??
+  //       `postgresql://${dbUser}:${dbPw}@${host}:${dbPort}/${database}`
+  //   // case ('production'):
+  //   default:
+  return process.env.SUPABASE_DB_DIRECT_URI
+  //     return process.env.DATABASE_URI ??
+  //       `postgresql://${dbUser}:${dbPw}@${host}:${dbPort}/${database}`
+
+
+  //   : process.env.DATABASE_URI ??
+  // `postgresql://${dbUser}:${dbPw}@${host}:${dbPort}/${database}`;
+  // }
 };
 
 // Speed up bcrypt during tests, since the algorithm safety isn't being tested
 //
 // WJB: Evaluate in 2021 if this should be increased to 13 for non-test use
-const BCRYPT_WORK_FACTOR = NODE_ENV === "test" ? 1 : 12;
+export const BCRYPT_WORK_FACTOR = NODE_ENV === "test" ? 1 : 12;
 
 console.log("stockapp Config:".green);
 console.log("NODE_ENV:".green, NODE_ENV);
@@ -75,7 +85,8 @@ console.log(
   "Database:".yellow,
   `${DB_NAME}`.blue,
   `=> URI: `.grey,
-  `${getDatabaseUri(dbConfigObj(NODE_ENV))}`.blue
+  // `${getDatabaseUri(dbConfigObj(NODE_ENV))}`.blue
+  `${getDatabaseUri()}`.blue
 );
 console.log("---");
 //log created tables
@@ -87,4 +98,4 @@ console.log("---");
 //   })
 //   .catch((e) => console.error(`Error getting table names: ${e}`));
 
-export { SECRET_KEY, PORT, BCRYPT_WORK_FACTOR, getDatabaseUri, dbConfigObj };
+export { getDatabaseUri, dbConfigObj };

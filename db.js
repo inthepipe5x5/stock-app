@@ -20,12 +20,12 @@ if (ENV === "production") {
 }
 
 db.connect()
-  // .then(() => console.log(`Connected to the database: ${process.env.DB_NAME}`))
-  // .catch((err) =>
-  //   console.error(
-  //     `Error connecting to the database: ${process.env.DB_NAME}`,
-  //     err
-  //   )
-  // );
+  .then(() => console.log(`Connected to the database`))
+  .catch((err) =>
+    console.error(
+      `Error connecting to the database: ${process.env.DB_NAME}`,
+      err
+    )
+  );
 
 export default db;

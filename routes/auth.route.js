@@ -9,6 +9,28 @@ import { UnauthorizedError } from "../expressError.js";
 // import UserHouseholds from "../models/userhouseholds.js";
 const authRoutes = express.Router();
 
+/* GET /auth/:userId: Get user information from Supabase auth.users table using the userId.
+  *
+  * Returns: { auth: user }
+  */
+
+authRoutes.get("/:userId", async (req, res, next) => {
+  const { userId } = req.params;
+
+  try {
+    const { data: user, error } = await supabase.auth.admin.getUserById(userId);
+
+    if (error) {
+      return next(new UnauthorizedError("Invalid user ID"));
+    }
+
+    res.json({ auth: user });
+  } catch (err) {
+    console.error(err);
+    return next(err);
+  }
+});
+
 //TODO: turn this into a route that re-authenticates a user from a magic link
 // /** POST /refresh: Refresh access token using refresh token.
 //  *
