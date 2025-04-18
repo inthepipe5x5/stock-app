@@ -1,5 +1,4 @@
 "use strict";
-import { user } from "pg/lib/defaults.js";
 import db from "../db.js";
 /** Convenience middleware to handle common auth cases in routes. */
 

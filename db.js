@@ -1,7 +1,6 @@
 "use strict";
 /** Database setup for stockapp. */
 import { getDatabaseUri, dbConfigObj } from "./config/config.js";
-import pkg from 'pg';
 const { Client } = pkg;
 
 let db;
