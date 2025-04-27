@@ -4,44 +4,72 @@
 
 // const jsonschema = require("jsonschema");
 
-// const express = require("express");
+const express = require("express");
 // const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
 // const { BadRequestError } = require("../expressError").default;
 // const User = require("../models/user").default;
 // const { createAccessToken } = require("../helpers/tokens").default;
-// const userNewSchema = require("../schemas/userNew.json");
+const userNewSchema = require("../schemas/userNew.json");
+const { default: supabase } = require("../lib/supabase");
 // const userUpdateSchema = require("../schemas/userUpdate.json");
 
-// const router = express.Router();
+const userRoutes = express.Router({ mergeParams: true });
 
 
-// /** POST / { user }  => { user, token }
-//  *
-//  * Adds a new user. This is not the registration endpoint --- instead, this is
-//  * only for admin users to add new users. The new user being added can be an
-//  * admin.
-//  *
-//  * This returns the newly created user and an authentication token for them:
-//  *  {user: { username, firstName, lastName, email, roleAccess }, token }
-//  *
-//  * Authorization required: admin
-//  **/
 
-// router.post("/", ensureAdmin, async function (req, res, next) {
-//   try {
-//     const validator = jsonschema.validate(req.body, userNewSchema);
-//     if (!validator.valid) {
-//       const errs = validator.errors.map(e => e.stack);
-//       throw new BadRequestError(errs);
-//     }
+/** POST / { user }  => { user, token }
+ *
+ * Adds a new user. This is not the registration endpoint --- instead, this is
+ * only for admin users to add new users. The new user being added can be an
+ * admin.
+ *
+ * This returns the newly created user and an authentication token for them:
+ *  {user: { username, firstName, lastName, email, roleAccess }, token }
+ *
+ *
+ **/
 
-//     const user = await User.register(req.body);
-//     const token = createAccessToken(user);
-//     return res.status(201).json({ user, token });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+router.post("/", async function (req, res, next) {
+    try {
+        const validator = jsonschema.validate(req.body, userNewSchema);
+        if (!validator.valid) {
+            const errs = validator.errors.map(e => e.stack);
+            throw new BadRequestError(errs);
+        }
+        const name = req.body?.name ?? [(req.body.firstName ?? "").trim(), (req.body.lastName ?? "").trim()].join(" ");
+        const draft_status = req.body?.draftStatus ?? "draft";
+        //create auth.users
+        const { data: { user }, error } = await supabase.auth.admin.createUser({
+            email: req.body.email,
+            password: req.body.password,
+            user_metadata: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                roleAccess: req.body.roleAccess,
+                draftStatus: req.body.draftStatus
+            }
+        });
+
+        if (error) {
+            throw new BadRequestError(error.message);
+        }
+        //create user in profiles table
+        const { data: { profile }, error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+                name,
+                first_name: req.body.firstName,
+                last_name: req.body.lastName,
+                email: req.body.email,
+                // roleAccess: req.body.roleAccess,
+                draft_status
+            });
+
+        return res.status(201).json({ user, token });
+    } catch (err) {
+        return next(err);
+    }
+});
 
 
 // /** GET / => { users: [ {username, firstName, lastName, email }, ... ] }

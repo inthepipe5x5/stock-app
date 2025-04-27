@@ -9,12 +9,14 @@ import bodyParser from "body-parser";
 import { NotFoundError } from "./expressError.js";
 
 import { attachAuthData, authenticateToken } from "./middleware/auth.js";
+import { responseCaseNormalizer, requestCaseNormalizer } from "./middleware/caseNormalizer.js";
 import authRoutes from "./routes/auth.route.js";
 import sessionRoutes from "./routes/session.route.js";
 // import usersRoutes from "./routes/users";
 
 import morgan from "morgan";
 import { loggerMiddleware } from "./middleware/logger.js";
+import searchRoutes from "./routes/search.route.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -26,10 +28,14 @@ app.use(cookieParser()); //use cookie parser to handle http only cookies
 //supabase auth middleware
 app.use(authenticateToken);
 app.use(attachAuthData); //attach user data to request context
+app.use(requestCaseNormalizer); //normalize request to camel case
 
 app.use("/auth", authRoutes);
 app.use('/session', sessionRoutes)
+app.use('/search', searchRoutes)
 app.use(loggerMiddleware); //logging for debugging
+
+app.use(responseCaseNormalizer); //normalize response to snake case
 // app.use("/companies", companiesRoutes);
 // app.use("/users", usersRoutes);
 // app.use("/jobs", jobsRoutes);

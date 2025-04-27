@@ -3,7 +3,7 @@
   "$id": "http://example.com/example.json",
   "type": "object",
   "properties": {
-    "username": {
+    "name": {
       "type": "string",
       "minLength": 1,
       "maxLength": 30
@@ -31,14 +31,16 @@
     },
     "roleAccess": {
       "type": "boolean"
+    },
+    "draftStatus": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "draft",
+        "published"
+      ]
     }
   },
   "additionalProperties": false,
-  "required": [
-    "username",
-    "firstName",
-    "lastName",
-    "password",
-    "email"
-  ]
+  "required": ["password", "email"]
 }

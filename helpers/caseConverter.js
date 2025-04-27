@@ -26,10 +26,10 @@ export const convertCamelToSnake = (camelCaseStr) => {
     (match, letter) => `_${letter.toLowerCase()}`
   );
 };
-/**
+/**Utility @function convertObjKeys
  * Recursively converts the keys of a nested object between snake_case and camelCase.
  *
- * @param {Object} obj - The object to convert.
+ * @param {Object | Array} obj - The Object or ARRAY to convert.
  * @param {string} [outputCase="camel"] - The desired case for the keys ("camel" or "snake").
  * @returns {Object} - The object with converted keys.
  */
@@ -47,5 +47,7 @@ export const convertObjKeys = (obj = {}, outputCase = "camel") => {
       return acc;
     }, {});
   }
+  // If obj is neither an array nor an object, return it as is.
+  // This includes primitive types like strings, numbers, booleans, etc.
   return obj;
 };

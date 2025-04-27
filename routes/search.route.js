@@ -102,7 +102,7 @@ searchRoutes.post('/tasks', async (req, res, next) => {
 
         t.id as task_id,
         t.task_name as task_name,
-        t.due_date as due_date,
+        t.due_date as task_due_date,
         t.description as task_description,
         t.created_at as task_created_at,
         t.updated_dt as task_updated_at,
@@ -114,7 +114,7 @@ searchRoutes.post('/tasks', async (req, res, next) => {
         t.automation_trigger as task_automation_trigger,
         t.recurrence_interval as task_recurrence_interval,
         t.recurrence_end_date as task_recurrence_end_date,
-        is_template as is_template,
+        t.is_template as task_is_template,
          FROM tasks as t
         WHERE 
         (LOWER(t.task_name) LIKE LOWER($1) OR LOWER(t.description) LIKE LOWER($1) OR LOWER(t.completion_status) ${!!join && join.includes('products') ? "OR LOWER(prod.product_name) LIKE LOWER($1) OR OR LOWER(prod.description) LIKE LOWER($1)" : ""}) 
@@ -186,7 +186,10 @@ searchRoutes.post('/products', async (req, res, next) => {
             default:
                 return next(new BadRequestError("Invalid join type"));
         }
-
+        `${!!join && join.includes('tasks') ? "JOIN tasks t ON t.id = prod.task_id" : ""}
+${!!join && join.includes('tasks') ? "JOIN task_assignments ta ON ta.task_id = t.id" : ""}
+${!!join && join.includes('tasks') ? "AND ta.user_id = $2" : ""}
+${!!join && join.includes('tasks') ? "AND t.draft_status = 'confirmed'" : ""}`
         let templateQuery = "AND prod.is_template = false";
         switch (template) {
             case ('true'):
@@ -256,11 +259,9 @@ searchRoutes.post('/products', async (req, res, next) => {
         prod.expiration_date as product_expiration_date,
          FROM products as prod`}
         WHERE 
-        (LOWER(prod.product_name) LIKE LOWER($1) OR LOWER(prod.description) LIKE LOWER($1)) 
-        ${!!join && join.includes('tasks') ? "JOIN tasks t ON t.id = prod.task_id" : ""}
-        ${!!join && join.includes('tasks') ? "JOIN task_assignments ta ON ta.task_id = t.id" : ""}
-        ${!!join && join.includes('tasks') ? "AND ta.user_id = $2" : ""}
-        ${!!join && join.includes('tasks') ? "AND t.draft_status = 'confirmed'" : ""}
+        (LOWER(prod.product_name) LIKE LOWER($1) OR LOWER(prod.description) LIKE LOWER($1))
+        ${draftQuery/* AND prod.draft_status = ??*/} 
+        ${joinQuery}
         ${templateQuery}
         ORDER BY prod.${order ?? "product_name"}
         ${!!limit ? `LIMIT ${limit?.[0] ?? limit ?? 10}` : ""}
