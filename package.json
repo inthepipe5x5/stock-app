@@ -5,31 +5,35 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node dist/server.ts",
+    "dev": "nodemon --watch './**/*.ts' --exec 'ts-node' server.ts",
+    "build": "tsc",
     "test": "jest",
-    "newdb": "psql -f stockapp.sql"
+    "db --init": "npx supabase init",
+    "db": "npx supabase start && npx supabase db pull"
   },
   "engines": {
     "node": ">=18"
   },
   "jest": {
-    "testEnvironment": "node",
+    "preset": "ts-jest",
     "transform": {
-      "^.+\\.js$": "babel-jest"
-    },
-    "testPathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "transformIgnorePatterns": [
-      "node_modules/(?!(your-dependency)/)"
-    ]
+      "^.+\\.ts$": "ts-jest",
+      "testEnvironment": "node",
+      "testPathIgnorePatterns": [
+        "/node_modules/"
+      ],
+      "transformIgnorePatterns": [
+        "node_modules/(?!(your-dependency)/)"
+      ]
+    }
   },
   "keywords": [],
   "author": "Hao Lin",
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.47.7",
+    "@types/jest": "^29.5.14",
     "accesscontrol": "^2.2.1",
     "another-json-schema": "^4.0.0",
     "bcrypt": "^5.0.0",
@@ -43,7 +47,8 @@
     "jsonschema": "^1.2.6",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "pg": "^8.3.0"
+    "pg": "^8.3.0",
+    "ts-jest": "^29.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.3",
@@ -51,10 +56,13 @@
     "@babel/preset-env": "^7.20.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.1",
     "@types/morgan": "^1.9.9",
+    "@types/node": "^22.15.2",
     "babel-jest": "^29.7.0",
     "jest": "^29.7.0",
-    "supertest": "^5.0.0-0"
+    "supabase": "^2.22.6",
+    "supertest": "^5.0.0-0",
+    "typescript": "^5.8.3"
   }
 }

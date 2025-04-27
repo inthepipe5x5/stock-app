@@ -2,14 +2,14 @@
 
 /** Express app for stockapp. */
 
-import express, { json } from "express";
+import express, { json, Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { NotFoundError } from "./expressError.js";
 
 import { attachAuthData, authenticateToken } from "./middleware/auth.js";
-import { responseCaseNormalizer, requestCaseNormalizer } from "./middleware/caseNormalizer.js";
+import { responseCaseNormalizer, requestCaseNormalizer } from "./middleware/caseNormalizer.ts";
 import authRoutes from "./routes/auth.route.js";
 import sessionRoutes from "./routes/session.route.js";
 // import usersRoutes from "./routes/users";
@@ -41,12 +41,12 @@ app.use(responseCaseNormalizer); //normalize response to snake case
 // app.use("/jobs", jobsRoutes);
 
 /** Handle 404 errors -- this matches everything */
-app.use(function (req, res, next) {
+app.use(function (req: Request, res: Response, next: NextFunction) {
   return next(new NotFoundError());
 });
 
 /** Generic error handler; anything unhandled goes here. */
-app.use(function (err, req, res, next) {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (process.env.NODE_ENV !== "production") console.error(err.stack);
   const status = err.status || 500;
   const message = err.message;

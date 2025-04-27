@@ -1,7 +1,7 @@
 "use strict";
 
 /** Routes for authentication. */
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import supabase from "../lib/supabase.js";
 import parseTimeString from "../helpers/parseTimeString.js";
 import { UnauthorizedError } from "../expressError.js";
@@ -14,7 +14,7 @@ const authRoutes = express.Router();
   * Returns: { auth: user }
   */
 
-authRoutes.get("/:userId", async (req, res, next) => {
+authRoutes.get("/:userId", async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
 
   try {
@@ -72,8 +72,11 @@ authRoutes.get("/:userId", async (req, res, next) => {
  *
  * Returns: { householdId, inventoryId }
  */
-authRoutes.post("/newuser", async (req, res, next) => {
-  const { userId } = res.locals.user ?? req?.context?.auth ?? req?.context?.user ?? req.cookies ?? req.params ?? req.body ?? req.query;
+authRoutes.post("/newuser", async (
+  req: Request,
+  res: Response, next: NextFunction) => {
+  
+    const { userId } = res.locals.user ?? req?.context?.auth ?? req?.context?.user ?? req.cookies ?? req.params ?? req.body ?? req.query;
 
   try {
     // Check if user already has a household or inventory

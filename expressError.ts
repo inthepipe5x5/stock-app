@@ -5,6 +5,8 @@
  */
 
 class ExpressError extends Error {
+  status: number;
+
   constructor(message, status) {
     super();
     this.message = message;
